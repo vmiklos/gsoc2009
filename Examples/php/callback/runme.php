@@ -14,7 +14,9 @@ print "Adding and calling a normal C++ callback\n";
 print "----------------------------------------\n";
 
 $callback = new Callback();
+print "thisown value: " . $callback->thisown . "\n";
 $callback->thisown = 0;
+print "thisown value: " . $callback->thisown . "\n";
 $caller->setCallback($callback);
 $caller->call();
 $caller->delCallback();

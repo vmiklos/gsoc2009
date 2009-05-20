@@ -390,6 +390,23 @@ public:
     Printf(s_header, "fail:\n");
     Printf(s_header, "  zend_error(SWIG_ErrorCode(),\"%s\",SWIG_ErrorMsg());\n");
     Printf(s_header, "}\n");
+    Printf(s_header, "ZEND_NAMED_FUNCTION(_wrap_swig_%s_get_newobject) {\n", module);
+    Printf(s_header, "  zval **args[1];\n");
+    Printf(s_header, "  swig_object_wrapper *value;\n");
+    Printf(s_header, "  int type;\n");
+    Printf(s_header, "\n");
+    Printf(s_header, "  SWIG_ResetError();\n");
+    Printf(s_header, "  if(ZEND_NUM_ARGS() != 1 || zend_get_parameters_array_ex(1, args) != SUCCESS) {\n");
+    Printf(s_header, "    WRONG_PARAM_COUNT;\n");
+    Printf(s_header, "  }\n");
+    Printf(s_header, "\n");
+    Printf(s_header, "  value = (swig_object_wrapper *) zend_list_find((*args[0])->value.lval, &type);\n");
+    Printf(s_header, "  RETVAL_LONG(value->newobject);\n");
+    Printf(s_header, "\n");
+    Printf(s_header, "  return;\n");
+    Printf(s_header, "fail:\n");
+    Printf(s_header, "  zend_error(SWIG_ErrorCode(),\"%s\",SWIG_ErrorMsg());\n");
+    Printf(s_header, "}\n");
 
     Printf(s_header, "#define SWIG_name  \"%s\"\n", module);
     /*     Printf(s_header,"#ifdef HAVE_CONFIG_H\n");
@@ -551,6 +568,7 @@ public:
     Printv(f_begin, s_header, s_vdecl, s_wrappers, NIL);
     Printv(f_begin, all_cs_entry, "\n\n", s_entry,
 	" SWIG_ZEND_NAMED_FE(swig_", module, "_alter_newobject,_wrap_swig_", module, "_alter_newobject,NULL)\n"
+	" SWIG_ZEND_NAMED_FE(swig_", module, "_get_newobject,_wrap_swig_", module, "_get_newobject,NULL)\n"
 	"{NULL, NULL, NULL}\n};\n\n", NIL);
     Printv(f_begin, s_init, NIL);
     Delete(s_header);
@@ -1797,6 +1815,7 @@ public:
 	  Printf(s_phpclasses, "\t\t$func = '%s_'.$var.'_get';\n", shadow_classname);
 	  Printf(s_phpclasses, "\t\tif (function_exists($func)) return call_user_func($func,$this->%s);\n", SWIG_PTR);
 	}
+	Printf(s_phpclasses, "\t\tif ($var == 'thisown') return swig_%s_get_newobject($this->%s);\n", module, SWIG_PTR);
 	// Reading an unknown property name gives null in PHP.
 	Printf(s_phpclasses, "\t\treturn null;\n");
 	Printf(s_phpclasses, "\t}\n");
