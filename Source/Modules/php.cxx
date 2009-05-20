@@ -1474,13 +1474,6 @@ public:
 	Printf(output, "\t\treturn %s;\n", invoke);
       }
       Printf(output, "\t}\n");
-      if (newobject) {
-	      Printf(output, "\n\tfunction __set($name, $value) {\n");
-	      Printf(output, "\t\tif ($name == 'thisown') {\n");
-	      Printf(output, "\t\t\tswig_%s_alter_newobject($this->_cPtr, $value);\n", module);
-	      Printf(output, "\t\t}\n");
-	      Printf(output, "\t}\n");
-      }
       Delete(prepare);
       Delete(invoke);
       free(arg_values);
@@ -1750,9 +1743,11 @@ public:
 	    Printf(s_phpclasses, "\t\tif ($var == '%s') return %s($this->%s,$value);\n", key, ki.item, SWIG_PTR);
 	    ki = Next(ki);
 	  }
+	  Printf(s_phpclasses, "\t\tif ($var == 'thisown') return swig_%s_alter_newobject($this->%s,$value);\n", module, SWIG_PTR);
 	} else {
 	  Printf(s_phpclasses, "\t\t$func = '%s_'.$var.'_set';\n", shadow_classname);
 	  Printf(s_phpclasses, "\t\tif (function_exists($func)) call_user_func($func,$this->%s,$value);\n", SWIG_PTR);
+	  Printf(s_phpclasses, "\t\tif ($var == 'thisown') swig_%s_alter_newobject($this->%s,$value);\n", module, SWIG_PTR);
 	}
 	Printf(s_phpclasses, "\t}\n");
 
@@ -1774,6 +1769,10 @@ public:
 	} else {
 	  Printf(s_phpclasses, "\t\treturn function_exists('%s_'.$var.'_set');\n", shadow_classname);
 	}
+	Printf(s_phpclasses, "\t}\n");
+      } else {
+	Printf(s_phpclasses, "\n\tfunction __set($var,$value) {\n");
+	Printf(s_phpclasses, "\t\tif ($var == 'thisown') return swig_%s_alter_newobject($this->%s,$value);\n", module, SWIG_PTR);
 	Printf(s_phpclasses, "\t}\n");
       }
       // Write property GET handlers

@@ -4,6 +4,9 @@
 
 class Callback {
 public:
+	int foo;
+	int bar;
+	int baz;
 	virtual ~Callback() { std::cout << "Callback::~Callback()" << std:: endl; }
 	virtual void run() { std::cout << "Callback::run()" << std::endl; }
 };
