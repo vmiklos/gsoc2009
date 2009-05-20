@@ -156,7 +156,7 @@ SWIG_ZTS_ConvertResourcePtr(zval *z, swig_type_info *ty, int flags TSRMLS_DC) {
   char *type_name;
 
   value = (swig_object_wrapper *) zend_list_find(z->value.lval, &type);
-  if ( flags && SWIG_POINTER_DISOWN ) {
+  if ( flags & SWIG_POINTER_DISOWN ) {
     value->newobject = 0;
   }
   p = value->ptr;
