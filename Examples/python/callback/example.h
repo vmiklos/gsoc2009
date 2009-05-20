@@ -1,6 +1,5 @@
 /* File : example.h */
 
-#include <cstdio>
 #include <iostream>
 
 class Callback {
