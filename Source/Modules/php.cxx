@@ -1753,6 +1753,7 @@ public:
 
 	/* Create __isset for PHP 5.1 and later; PHP 5.0 will just ignore it. */
 	Printf(s_phpclasses, "\n\tfunction __isset($var) {\n");
+	Printf(s_phpclasses, "\t\tif ($var == 'thisown') return true;\n");
 	// FIXME: tune this threshold, but it should probably be different to
 	// that for __set() and __get() as we don't need to call_user_func()
 	// here...
@@ -1773,6 +1774,9 @@ public:
       } else {
 	Printf(s_phpclasses, "\n\tfunction __set($var,$value) {\n");
 	Printf(s_phpclasses, "\t\tif ($var == 'thisown') return swig_%s_alter_newobject($this->%s,$value);\n", module, SWIG_PTR);
+	Printf(s_phpclasses, "\t}\n");
+	Printf(s_phpclasses, "\n\tfunction __isset($var) {\n");
+	Printf(s_phpclasses, "\t\treturn $var == 'thisown';\n");
 	Printf(s_phpclasses, "\t}\n");
       }
       // Write property GET handlers
