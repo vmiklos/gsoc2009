@@ -371,6 +371,26 @@ public:
     Printf(s_header, "  SWIG_ErrorCode() = default_error_code;\n");
     Printf(s_header, "}\n");
 
+    Printf(s_header, "\n");
+    Printf(s_header, "ZEND_NAMED_FUNCTION(_wrap_swig_%s_alter_newobject) {\n", module);
+    Printf(s_header, "  zval **args[2];\n");
+    Printf(s_header, "  swig_object_wrapper *value;\n");
+    Printf(s_header, "  int type;\n");
+    Printf(s_header, "  int thisown;\n");
+    Printf(s_header, "\n");
+    Printf(s_header, "  SWIG_ResetError();\n");
+    Printf(s_header, "  if(ZEND_NUM_ARGS() != 2 || zend_get_parameters_array_ex(2, args) != SUCCESS) {\n");
+    Printf(s_header, "    WRONG_PARAM_COUNT;\n");
+    Printf(s_header, "  }\n");
+    Printf(s_header, "\n");
+    Printf(s_header, "  value = (swig_object_wrapper *) zend_list_find((*args[0])->value.lval, &type);\n");
+    Printf(s_header, "  value->newobject = zval_is_true(*args[1]);\n");
+    Printf(s_header, "\n");
+    Printf(s_header, "  return;\n");
+    Printf(s_header, "fail:\n");
+    Printf(s_header, "  zend_error(SWIG_ErrorCode(),\"%s\",SWIG_ErrorMsg());\n");
+    Printf(s_header, "}\n");
+
     Printf(s_header, "#define SWIG_name  \"%s\"\n", module);
     /*     Printf(s_header,"#ifdef HAVE_CONFIG_H\n");
        Printf(s_header,"#include \"config.h\"\n");
@@ -529,7 +549,9 @@ public:
 
     Dump(f_runtime, f_begin);
     Printv(f_begin, s_header, s_vdecl, s_wrappers, NIL);
-    Printv(f_begin, all_cs_entry, "\n\n", s_entry, "{NULL, NULL, NULL}\n};\n\n", NIL);
+    Printv(f_begin, all_cs_entry, "\n\n", s_entry,
+	" SWIG_ZEND_NAMED_FE(swig_", module, "_alter_newobject,_wrap_swig_", module, "_alter_newobject,NULL)\n"
+	"{NULL, NULL, NULL}\n};\n\n", NIL);
     Printv(f_begin, s_init, NIL);
     Delete(s_header);
     Delete(s_wrappers);
@@ -1452,6 +1474,13 @@ public:
 	Printf(output, "\t\treturn %s;\n", invoke);
       }
       Printf(output, "\t}\n");
+      if (newobject) {
+	      Printf(output, "\n\tfunction __set($name, $value) {\n");
+	      Printf(output, "\t\tif ($name == 'thisown') {\n");
+	      Printf(output, "\t\t\tswig_%s_alter_newobject($this->_cPtr, $value);\n", module);
+	      Printf(output, "\t\t}\n");
+	      Printf(output, "\t}\n");
+      }
       Delete(prepare);
       Delete(invoke);
       free(arg_values);
