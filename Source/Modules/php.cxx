@@ -1738,8 +1738,9 @@ public:
       }
 
       Printf(s_phpclasses, "class %s%s ", prefix, shadow_classname);
+      String *baseclass;
       if (base.item) {
-	String *baseclass = Getattr(base.item, "sym:name");
+	baseclass = Getattr(base.item, "sym:name");
 	if (!baseclass)
 	  baseclass = Getattr(base.item, "name");
 	Printf(s_phpclasses, "extends %s%s ", prefix, baseclass);
@@ -1761,11 +1762,13 @@ public:
 	    Printf(s_phpclasses, "\t\tif ($var == '%s') return %s($this->%s,$value);\n", key, ki.item, SWIG_PTR);
 	    ki = Next(ki);
 	  }
-	  Printf(s_phpclasses, "\t\tif ($var == 'thisown') return swig_%s_alter_newobject($this->%s,$value);\n", module, SWIG_PTR);
 	} else {
 	  Printf(s_phpclasses, "\t\t$func = '%s_'.$var.'_set';\n", shadow_classname);
-	  Printf(s_phpclasses, "\t\tif (function_exists($func)) call_user_func($func,$this->%s,$value);\n", SWIG_PTR);
-	  Printf(s_phpclasses, "\t\tif ($var == 'thisown') swig_%s_alter_newobject($this->%s,$value);\n", module, SWIG_PTR);
+	  Printf(s_phpclasses, "\t\tif (function_exists($func)) return call_user_func($func,$this->%s,$value);\n", SWIG_PTR);
+	}
+	Printf(s_phpclasses, "\t\tif ($var == 'thisown') return swig_%s_alter_newobject($this->%s,$value);\n", module, SWIG_PTR);
+	if (base.item) {
+	  Printf(s_phpclasses, "\t\treturn %s%s::__set($var,$value);\n", prefix, baseclass);
 	}
 	Printf(s_phpclasses, "\t}\n");
 
@@ -1817,7 +1820,11 @@ public:
 	}
 	Printf(s_phpclasses, "\t\tif ($var == 'thisown') return swig_%s_get_newobject($this->%s);\n", module, SWIG_PTR);
 	// Reading an unknown property name gives null in PHP.
-	Printf(s_phpclasses, "\t\treturn null;\n");
+	if (base.item) {
+	  Printf(s_phpclasses, "\t\treturn %s%s::__get($var);\n", prefix, baseclass);
+	} else {
+	  Printf(s_phpclasses, "\t\treturn null;\n");
+	}
 	Printf(s_phpclasses, "\t}\n");
       }
 
