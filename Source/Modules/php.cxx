@@ -1627,7 +1627,7 @@ public:
    * Pragma directive.
    *
    * %pragma(php) code="String"         # Includes a string in the .php file
-   * %pragma(php) include="file.pl"     # Includes a file in the .php file
+   * %pragma(php) include="file.php"    # Includes a file in the .php file
    */
 
   virtual int pragmaDirective(Node *n) {
