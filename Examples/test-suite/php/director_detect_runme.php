@@ -13,6 +13,7 @@ check::globals(array());
 
 class MyBar extends Bar {
   function __construct($val = 2) {
+    parent::__construct();
     $this->val = $val;
   }
 

@@ -12,6 +12,7 @@ check::globals(array());
 
 class MyObject extends SpObject{
   function __construct() {
+    parent::__construct();
     return;
   }
 
