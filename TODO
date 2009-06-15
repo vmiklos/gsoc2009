@@ -376,3 +376,13 @@ Documentation
 
 **     Add section on WAD.
 
+Miklos' items
+-------------
+
+Examples:
+
+- callback: Registering a C++ callback works, but not a PHP one. The
+  second part should print "PhpCallback::run" instead of
+  "Callback::run".
+- extend: Passes, but the overwritten virtual method is not called. It
+  prints "Manager Alice" where it should "CEO Alice".
