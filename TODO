@@ -387,3 +387,4 @@ Examples:
 - extend: Passes, but the overwritten virtual method is not called. It
   prints "Manager Alice" where it should "CEO Alice".
 - swigrun: It makes no sense to port this before we have a swigphprun.h.
+- weave: 100% Python-specific, it's no good porting it.
