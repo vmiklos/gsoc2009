@@ -4,19 +4,38 @@
 
 require("example.php");
 
+# Class, which overwrites Callback::run().
+
+class PhpCallback extends Callback {
+  function run() {
+    print "PhpCallback.run()\n";
+  }
+};
+
 # Create an Caller instance
 
 $caller = new Caller();
 
-# Add a simple C++ callback.
+# Add a simple C++ callback (caller owns the callback, so
+# we disown it first by clearing the .thisown flag).
 
 print "Adding and calling a normal C++ callback\n";
 print "----------------------------------------\n";
 
 $callback = new Callback();
-print "thisown value: " . $callback->thisown . "\n";
 $callback->thisown = 0;
-print "thisown value: " . $callback->thisown . "\n";
+$caller->setCallback($callback);
+$caller->call();
+$caller->delCallback();
+
+print "\n";
+print "Adding and calling a PHP callback\n";
+print "------------------------------------\n";
+
+# Add a PHP callback.
+
+$callback = new PhpCallback();
+$callback->thisown = 0;
 $caller->setCallback($callback);
 $caller->call();
 $caller->delCallback();
