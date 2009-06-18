@@ -388,3 +388,7 @@ Examples:
   prints "Manager Alice" where it should "CEO Alice".
 - swigrun: It makes no sense to port this before we have a swigphprun.h.
 - weave: 100% Python-specific, it's no good porting it.
+
+Performance:
+- Try to avoid the get_class() call in PHP and use a Zend API equivalent
+  of it from the C++ code if possible.
