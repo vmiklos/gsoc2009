@@ -73,8 +73,11 @@ static String *shadow_classname = 0;
 
 static File *f_begin = 0;
 static File *f_runtime = 0;
+static File *f_runtime_h = 0;
 static File *f_h = 0;
 static File *f_phpcode = 0;
+static File *f_directors = 0;
+static File *f_directors_h = 0;
 static String *phpfilename = 0;
 
 static String *s_header;
@@ -117,6 +120,7 @@ static enum {
   membervar,
   staticmembervar,
   constructor,
+  directorconstructor,
   destructor
 } wrapperType = standard;
 
@@ -175,7 +179,9 @@ void SwigPHP_emit_resource_registrations() {
 
 class PHP : public Language {
 public:
-  PHP() { }
+  PHP() {
+    director_language = 1;
+  }
 
   /* Test to see if a type corresponds to something wrapped with a shadow class. */
   
@@ -256,8 +262,21 @@ public:
     String *filen;
     String *s_type;
 
+    /* Check if directors are enabled for this module. */
+    Node *mod = Getattr(n, "module");
+    if (mod) {
+      Node *options = Getattr(mod, "options");
+      if (Getattr(options, "directors")) {
+	allow_directors();
+      }
+    }
+
+    /* Set comparison with none for ConstructorToFunction */
+    setSubclassInstanceCheck(NewString("$arg->type != IS_NULL"));
+
     /* Initialize all of the output files */
     String *outfile = Getattr(n, "outfile");
+    String *outfile_h = Getattr(n, "outfile_h");
 
     /* main output file */
     f_begin = NewFile(outfile, "w", SWIG_output_files());
@@ -282,6 +301,16 @@ public:
     s_oinit = NewString("/* oinit subsection */\n");
     pragma_phpinfo = NewStringEmpty();
     s_phpclasses = NewString("/* PHP Proxy Classes */\n");
+    f_directors_h = NewString("");
+    f_directors = NewString("");
+
+    if (directorsEnabled()) {
+      f_runtime_h = NewFile(outfile_h, "w", SWIG_output_files());
+      if (!f_runtime_h) {
+	FileErrorDisplay(outfile_h);
+	SWIG_exit(EXIT_FAILURE);
+      }
+    }
 
     /* Register file targets with the SWIG file handler */
     Swig_register_filebyname("begin", f_begin);
@@ -292,6 +321,8 @@ public:
     Swig_register_filebyname("rshutdown", r_shutdown);
     Swig_register_filebyname("header", s_header);
     Swig_register_filebyname("wrapper", s_wrappers);
+    Swig_register_filebyname("director", f_directors);
+    Swig_register_filebyname("director_h", f_directors_h);
 
     Swig_banner(f_begin);
 
@@ -299,11 +330,24 @@ public:
     Printf(f_runtime, "#define SWIGPHP\n");
     Printf(f_runtime, "\n");
 
+    if (directorsEnabled()) {
+      Printf(f_runtime, "#define SWIG_DIRECTORS\n");
+    }
+
     /* Set the module name */
     module = Copy(Getattr(n, "name"));
     cap_module = NewStringf("%(upper)s", module);
     if (!prefix)
       prefix = NewStringEmpty();
+
+    if (directorsEnabled()) {
+      Swig_banner(f_directors_h);
+      Printf(f_directors_h, "\n");
+      Printf(f_directors_h, "#ifndef SWIG_%s_WRAP_H_\n", module);
+      Printf(f_directors_h, "#define SWIG_%s_WRAP_H_\n\n", module);
+
+      Printf(f_directors, "\n#include \"%s\"\n\n", Swig_file_filename(outfile_h));
+    }
 
     /* PHP module file */
     filen = NewStringEmpty();
@@ -560,12 +604,25 @@ public:
      * function really needs totally redoing.
      */
 
+    if (directorsEnabled()) {
+      Dump(f_directors_h, f_runtime_h);
+      Printf(f_runtime_h, "\n");
+      Printf(f_runtime_h, "#endif\n");
+      Close(f_runtime_h);
+    }
+
     Printf(s_header, "/* end header section */\n");
     Printf(s_wrappers, "/* end wrapper section */\n");
     Printf(s_vdecl, "/* end vdecl subsection */\n");
 
     Dump(f_runtime, f_begin);
-    Printv(f_begin, s_header, s_vdecl, s_wrappers, NIL);
+    Printv(f_begin, s_header, NIL);
+    if (directorsEnabled()) {
+      // Insert director runtime
+      Swig_insert_file("director.swg", f_begin);
+      Dump(f_directors, f_begin);
+    }
+    Printv(f_begin, s_vdecl, s_wrappers, NIL);
     Printv(f_begin, all_cs_entry, "\n\n", s_entry,
 	" SWIG_ZEND_NAMED_FE(swig_", module, "_alter_newobject,_wrap_swig_", module, "_alter_newobject,NULL)\n"
 	" SWIG_ZEND_NAMED_FE(swig_", module, "_get_newobject,_wrap_swig_", module, "_get_newobject,NULL)\n"
@@ -728,8 +785,14 @@ public:
     int num_required = emit_num_required(l);
     numopt = num_arguments - num_required;
 
+    if (wrapperType == directorconstructor)
+      num_arguments++;
+
     if (num_arguments > 0) {
-      String *args = NewStringf("zval **args[%d]", num_arguments);
+      String *args = NewString("");
+      if (wrapperType == directorconstructor)
+	Printv(args, "zval *arg1;\n", NIL);
+      Printf(args, "zval **args[%d]", num_arguments);
       Wrapper_add_local(f, "args", args);
       Delete(args);
       args = NULL;
@@ -758,6 +821,8 @@ public:
       }
       Printf(f->code, "WRONG_PARAM_COUNT;\n}\n\n");
     }
+    if (wrapperType == directorconstructor)
+      Printf(f->code, "arg1 = *args[0];\n  \n");
 
     /* Now convert from PHP to C variables */
     // At this point, argcount if used is the number of deliberately passed args
@@ -769,7 +834,10 @@ public:
     // _this and not the first argument.
     // This may mean looking at Language::memberfunctionHandler
 
-    for (i = 0, p = l; i < num_arguments; i++) {
+    int limit = num_arguments;
+    if (wrapperType == directorconstructor)
+      limit--;
+    for (i = 0, p = l; i < limit; i++) {
       String *source;
 
       /* Skip ignored arguments */
@@ -1444,7 +1512,18 @@ public:
 
       Printf(output, "%s", prepare);
       if (newobject) {
-	Printf(output, "\t\t$this->%s=%s;\n", SWIG_PTR, invoke);
+	if (!directorsEnabled() || !Swig_directorclass(n)) {
+	  Printf(output, "\t\t$this->%s=%s;\n", SWIG_PTR, invoke);
+	} else {
+	  Node *parent = Swig_methodclass(n);
+	  String *classname = Swig_class_name(parent);
+	  Printf(output, "\t\tif (get_class($this) === \"%s\") {\n", classname);
+	  Printf(output, "\t\t\t$_this = null;\n");
+	  Printf(output, "\t\t} else {\n");
+	  Printf(output, "\t\t\t$_this = $this;\n");
+	  Printf(output, "\t\t}\n");
+	  Printf(output, "\t\t$this->%s=%s($_this);\n", SWIG_PTR, iname);
+	}
       } else if (Cmp(d, "void") == 0) {
 	if (Cmp(invoke, "$r") != 0)
 	  Printf(output, "\t\t%s;\n", invoke);
@@ -2018,7 +2097,17 @@ public:
 
   virtual int constructorHandler(Node *n) {
     constructors++;
-    wrapperType = constructor;
+    if (Swig_directorclass(n)) {
+      String *name = GetChar(Swig_methodclass(n), "name");
+      Delete(director_ctor_code);
+      director_ctor_code = NewString("");
+      Printf(director_ctor_code, "if ( arg1->type != IS_NULL ) { /* subclassed */\n");
+      Printf(director_ctor_code, "  result = (%s *)new SwigDirector_%s(arg1);\n", name, name);
+      Printf(director_ctor_code, "} else {\n  result = (%s *)new %s();\n}\n", name, name);
+      wrapperType = directorconstructor;
+    } else {
+      wrapperType = constructor;
+    }
     Language::constructorHandler(n);
     wrapperType = standard;
 
@@ -2089,6 +2178,116 @@ public:
     return SWIG_OK;
   }
 
+  int classDirectorInit(Node *n) {
+    String *declaration = Swig_director_declaration(n);
+    Printf(f_directors_h, "%s\n", declaration);
+    Printf(f_directors_h, "public:\n");
+    Delete(declaration);
+    return Language::classDirectorInit(n);
+  }
+
+  int classDirectorEnd(Node *n) {
+    Printf(f_directors_h, "};\n");
+    return Language::classDirectorEnd(n);
+  }
+
+  int classDirectorConstructor(Node *n) {
+    Node *parent = Getattr(n, "parentNode");
+    String *decl = Getattr(n, "decl");
+    String *supername = Swig_class_name(parent);
+    String *classname = NewString("");
+    Printf(classname, "SwigDirector_%s", supername);
+
+    /* insert self parameter */
+    Parm *p;
+    ParmList *superparms = Getattr(n, "parms");
+    ParmList *parms = CopyParmList(superparms);
+    String *type = NewString("zval");
+    SwigType_add_pointer(type);
+    p = NewParm(type, NewString("self"));
+    set_nextSibling(p, parms);
+    parms = p;
+
+    if (!Getattr(n, "defaultargs")) {
+      /* constructor */
+      {
+	Wrapper *w = NewWrapper();
+	String *call;
+	String *basetype = Getattr(parent, "classtype");
+	String *target = Swig_method_decl(0, decl, classname, parms, 0, 0);
+	call = Swig_csuperclass_call(0, basetype, superparms);
+	Printf(w->def, "%s::%s: %s, Swig::Director(self) {", classname, target, call);
+	Append(w->def, "}");
+	Delete(target);
+	Wrapper_print(w, f_directors);
+	Delete(call);
+	DelWrapper(w);
+      }
+
+      /* constructor header */
+      {
+	String *target = Swig_method_decl(0, decl, classname, parms, 0, 1);
+	Printf(f_directors_h, "    %s;\n", target);
+	Delete(target);
+      }
+    }
+    return Language::classDirectorConstructor(n);
+  }
+
+  int classDirectorDefaultConstructor(Node *n) {
+    return Language::classDirectorDefaultConstructor(n);
+  }
+
+  int classDirectorMethod(Node *n, Node *parent, String *super) {
+    String *decl = Getattr(n, "decl");
+    String *type = Getattr(n, "type");
+    String *name = Getattr(n, "name");
+    String *classname = Getattr(parent, "sym:name");
+    String *pclassname = NewStringf("SwigDirector_%s", classname);
+    String *declaration = NewString("");;
+    ParmList *l = Getattr(n, "parms");
+    Wrapper *w = NewWrapper();
+
+    /* virtual method definition */
+    String *target;
+    String *qualified_name = NewStringf("%s::%s", pclassname, name);
+    SwigType *rtype = Getattr(n, "conversion_operator") ? 0 : type;
+    target = Swig_method_decl(rtype, decl, qualified_name, l, 0, 0);
+    Printf(w->def, "%s {", target);
+    Delete(qualified_name);
+    Delete(target);
+
+    /* header declaration */
+    target = Swig_method_decl(rtype, decl, name, l, 0, 1);
+    Printf(declaration, "    virtual %s;\n", target);
+    Delete(target);
+
+    Append(w->code, "if (!swig_self) {\n");
+    Printf(w->code, "  SWIG_PHP_Error(E_ERROR, \"this pointer is NULL\");\n");
+    Append(w->code, "}\n");
+    Append(w->code, "zval retval, funcname;\n\n");
+    Printf(w->code, "ZVAL_STRING(&funcname, (char *)\"%s\", 0);\n\n", name);
+    Append(w->code, "call_user_function(EG(function_table), &swig_self, &funcname,\n");
+    Append(w->code, "    &retval, 0, NULL TSRMLS_CC);\n");
+    Append(w->code, "return;\n");
+    Append(w->code, "fail:\n");
+    Append(w->code, "zend_error(SWIG_ErrorCode(),\"%s\",SWIG_ErrorMsg());\n");
+    Append(w->code, "}");
+
+    /* emit the director method */
+    Wrapper_print(w, f_directors);
+    Printv(f_directors_h, declaration, NIL);
+
+    /* clean up */
+    Delete(pclassname);
+    Delete(declaration);
+    DelWrapper(w);
+    return SWIG_OK;
+  }
+
+  int classDirectorDisown(Node *n) {
+    return SWIG_OK;
+  }
 };				/* class PHP */
 
 static PHP *maininstance = 0;
