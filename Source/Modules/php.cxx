@@ -2498,7 +2498,11 @@ public:
 	}
 	p = nextSibling(p);
       }
-      Printf(w->code, "zval *args[%d];\n", idx);
+      if (!idx) {
+	Printf(w->code, "zval **args = NULL;\n", idx);
+      } else {
+	Printf(w->code, "zval *args[%d];\n", idx);
+      }
       Append(w->code, "zval *result, funcname;\n");
       Append(w->code, "MAKE_STD_ZVAL(result);\n");
       Printf(w->code, "ZVAL_STRING(&funcname, (char *)\"%s\", 0);\n", name);
