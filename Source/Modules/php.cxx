@@ -1518,7 +1518,7 @@ public:
 	  Printf(output, "\t\t} else {\n");
 	  Printf(output, "\t\t\t$_this = $this;\n");
 	  Printf(output, "\t\t}\n");
-	  if (num_arguments > 0) {
+	  if (num_arguments > 1) {
 	    Printf(output, "\t\t$this->%s=%s($_this, %s);\n", SWIG_PTR, iname, args);
 	  } else {
 	    Printf(output, "\t\t$this->%s=%s($_this);\n", SWIG_PTR, iname);
@@ -2122,9 +2122,12 @@ public:
       /* director ctor code is specific for each class */
       Delete(director_ctor_code);
       director_ctor_code = NewString("");
-      Printf(director_ctor_code, "if ( arg0->type != IS_NULL ) { /* subclassed */\n");
-      Printf(director_ctor_code, "  result = (%s *)new SwigDirector_%s(arg0, %s);\n", name, name, args);
-      Printf(director_ctor_code, "} else {\n  result = (%s *)new %s(%s);\n}\n", name, name, args);
+      Printf(director_ctor_code, "if ( arg0->type == IS_NULL ) { /* not subclassed */\n");
+      Printf(director_ctor_code, "  result = (%s *)new %s(%s);\n", name, name, args);
+      if (i) {
+	Insert(args, 0, ", ");
+      }
+      Printf(director_ctor_code, "} else {\n  result = (%s *)new SwigDirector_%s(arg0%s);\n}\n", name, name, args);
       Delete(args);
 
       wrapperType = directorconstructor;
