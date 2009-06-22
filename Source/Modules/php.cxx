@@ -2499,11 +2499,12 @@ public:
 	p = nextSibling(p);
       }
       Printf(w->code, "zval *args[%d];\n", idx);
+      Append(w->code, "zval *result, funcname;\n");
+      Append(w->code, "MAKE_STD_ZVAL(result);\n");
+      Printf(w->code, "ZVAL_STRING(&funcname, (char *)\"%s\", 0);\n", name);
       Append(w->code, "if (!swig_self) {\n");
       Append(w->code, "  SWIG_PHP_Error(E_ERROR, \"this pointer is NULL\");");
       Append(w->code, "}\n\n");
-      Append(w->code, "zval retval, funcname;\n");
-      Printf(w->code, "ZVAL_STRING(&funcname, (char *)\"%s\", 0);\n", name);
 
       /* add the method name as a PyString */
       String *pyname = Getattr(n, "sym:name");
@@ -2525,7 +2526,7 @@ public:
 
 
       Append(w->code, "call_user_function(EG(function_table), &swig_self, &funcname,\n");
-      Printf(w->code, "  &retval, %d, args TSRMLS_CC);\n", idx);
+      Printf(w->code, "  result, %d, args TSRMLS_CC);\n", idx);
       /* vmiklos Append(w->code, "#endif\n"); */
 
       if (dirprot_mode() && !is_public(n))
@@ -2543,10 +2544,6 @@ public:
       if ((tm) && Len(tm) && (Strcmp(tm, "1") != 0)) {
 	Replaceall(tm, "$error", "error");
 	Printv(w->code, Str(tm), "\n", NIL);
-      } else {
-	Append(w->code, "return;\n");
-	Append(w->code, "fail:\n");
-	Append(w->code, "zend_error(SWIG_ErrorCode(),\"%s\",SWIG_ErrorMsg());\n");
       }
       /* vmiklos Append(w->code, "}\n"); */
       Delete(tm);
@@ -2589,7 +2586,7 @@ public:
 	    Printf(w->code, "output = PyTuple_GetItem(result, %d);\n", idx++);
 	    Replaceall(tm, "$input", "output");
 	  } else {
-	    Replaceall(tm, "$input", "result");
+	    Replaceall(tm, "$input", "&result");
 	  }
 	  char temp[24];
 	  sprintf(temp, "%d", idx);
@@ -2644,6 +2641,7 @@ public:
       Delete(outarg);
     }
 
+    Append(w->code, "FREE_ZVAL(result);\n");
     if (!is_void) {
       if (!(ignored_method && !pure_virtual)) {
 	String *rettype = SwigType_str(return_type, 0);
@@ -2654,8 +2652,12 @@ public:
 	}
 	Delete(rettype);
       }
+    } else {
+      Append(w->code, "return;\n");
     }
 
+    Append(w->code, "fail:\n");
+    Append(w->code, "zend_error(SWIG_ErrorCode(),\"%s\",SWIG_ErrorMsg());\n");
     Append(w->code, "}\n");
 
     // We expose protected methods via an extra public inline method which makes a straight call to the wrapped class' method
@@ -2691,6 +2693,8 @@ public:
   }
 
   int classDirectorDisown(Node *n) {
+    /* avoid a warning */
+    n = n;
     return SWIG_OK;
   }
 };				/* class PHP */
