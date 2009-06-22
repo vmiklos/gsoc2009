@@ -791,7 +791,7 @@ public:
     if (num_arguments > 0) {
       String *args = NewString("");
       if (wrapperType == directorconstructor)
-	Printv(args, "zval *arg1;\n", NIL);
+	Printv(args, "zval *arg0;\n", NIL);
       Printf(args, "zval **args[%d]", num_arguments);
       Wrapper_add_local(f, "args", args);
       Delete(args);
@@ -822,7 +822,7 @@ public:
       Printf(f->code, "WRONG_PARAM_COUNT;\n}\n\n");
     }
     if (wrapperType == directorconstructor)
-      Printf(f->code, "arg1 = *args[0];\n  \n");
+      Printf(f->code, "arg0 = *args[0];\n  \n");
 
     /* Now convert from PHP to C variables */
     // At this point, argcount if used is the number of deliberately passed args
@@ -848,7 +848,11 @@ public:
 
       SwigType *pt = Getattr(p, "type");
 
-      source = NewStringf("args[%d]", i);
+      if (wrapperType == directorconstructor) {
+	source = NewStringf("args[%d]", i+1);
+      } else {
+	source = NewStringf("args[%d]", i);
+      }
 
       String *ln = Getattr(p, "lname");
 
@@ -1501,14 +1505,6 @@ public:
       } else {
 	Printf(output, "\tstatic function %s(%s) {\n", methodname, args);
       }
-      Delete(args);
-      args = NULL;
-
-      for (int i = 0; i < max_num_of_arguments; ++i) {
-	Delete(arg_names[i]);
-      }
-      free(arg_names);
-      arg_names = NULL;
 
       Printf(output, "%s", prepare);
       if (newobject) {
@@ -1522,7 +1518,11 @@ public:
 	  Printf(output, "\t\t} else {\n");
 	  Printf(output, "\t\t\t$_this = $this;\n");
 	  Printf(output, "\t\t}\n");
-	  Printf(output, "\t\t$this->%s=%s($_this);\n", SWIG_PTR, iname);
+	  if (num_arguments > 0) {
+	    Printf(output, "\t\t$this->%s=%s($_this, %s);\n", SWIG_PTR, iname, args);
+	  } else {
+	    Printf(output, "\t\t$this->%s=%s($_this);\n", SWIG_PTR, iname);
+	  }
 	}
       } else if (Cmp(d, "void") == 0) {
 	if (Cmp(invoke, "$r") != 0)
@@ -1574,6 +1574,15 @@ public:
       Delete(prepare);
       Delete(invoke);
       free(arg_values);
+
+      Delete(args);
+      args = NULL;
+
+      for (int i = 0; i < max_num_of_arguments; ++i) {
+	Delete(arg_names[i]);
+      }
+      free(arg_names);
+      arg_names = NULL;
     }
 
     DelWrapper(f);
@@ -2099,11 +2108,25 @@ public:
     constructors++;
     if (Swig_directorclass(n)) {
       String *name = GetChar(Swig_methodclass(n), "name");
+      String *args = NewString("");
+      ParmList *p = Getattr(n, "parms");
+      int i;
+
+      for (i = 0; p; p = nextSibling(p), i++) {
+	if (i) {
+	  Printf(args, ", ");
+	}
+	Printf(args, "arg%d", i+1);
+      }
+
+      /* director ctor code is specific for each class */
       Delete(director_ctor_code);
       director_ctor_code = NewString("");
-      Printf(director_ctor_code, "if ( arg1->type != IS_NULL ) { /* subclassed */\n");
-      Printf(director_ctor_code, "  result = (%s *)new SwigDirector_%s(arg1);\n", name, name);
-      Printf(director_ctor_code, "} else {\n  result = (%s *)new %s();\n}\n", name, name);
+      Printf(director_ctor_code, "if ( arg0->type != IS_NULL ) { /* subclassed */\n");
+      Printf(director_ctor_code, "  result = (%s *)new SwigDirector_%s(arg0, %s);\n", name, name, args);
+      Printf(director_ctor_code, "} else {\n  result = (%s *)new %s(%s);\n}\n", name, name, args);
+      Delete(args);
+
       wrapperType = directorconstructor;
     } else {
       wrapperType = constructor;
