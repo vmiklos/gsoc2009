@@ -176,6 +176,21 @@
 	ZVAL_LONG(return_value,$1);
 }
 
+%typemap(directorin) int,
+              unsigned int,
+              short,
+              unsigned short,
+              long,
+              unsigned long,
+              signed char,
+              unsigned char,
+              bool,
+              size_t,
+              enum SWIGTYPE
+{
+  ZVAL_LONG($input,$1);
+}
+
 %typemap(out) bool
 {
 	ZVAL_BOOL(return_value,($1)?1:0);
