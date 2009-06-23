@@ -2433,13 +2433,10 @@ public:
 	String *ptype = Getattr(p, "type");
 
 	Putc(',', arglist);
-	if ((tm = Getattr(p, "tmap:directorin")) != 0) {
+	if ((tm = Swig_typemap_lookup("directorin", n, pname, w)) != 0) {
 	  String *parse = Getattr(p, "tmap:directorin:parse");
 	  if (!parse) {
 	    sprintf(source, "arg%d", idx++);
-	    String *pp = NewStringf("&%s", pname);
-	    Replaceall(tm, "&", pp);
-	    Delete(pp);
 	    String *input = NewStringf("&%s", source);
 	    Replaceall(tm, "$input", input);
 	    Delete(input);
