@@ -2129,12 +2129,16 @@ public:
       /* director ctor code is specific for each class */
       Delete(director_ctor_code);
       director_ctor_code = NewString("");
+      director_prot_ctor_code = NewString("");
       Printf(director_ctor_code, "if ( arg0->type == IS_NULL ) { /* not subclassed */\n");
+      Printf(director_prot_ctor_code, "if ( arg0->type == IS_NULL ) { /* not subclassed */\n");
       Printf(director_ctor_code, "  result = (%s *)new %s(%s);\n", name, name, args);
+      Printf(director_prot_ctor_code, "  SWIG_PHP_Error(E_ERROR, \"accessing abstract class or protected constructor\");\n", name, name, args);
       if (i) {
 	Insert(args, 0, ", ");
       }
       Printf(director_ctor_code, "} else {\n  result = (%s *)new SwigDirector_%s(arg0%s);\n}\n", name, name, args);
+      Printf(director_prot_ctor_code, "} else {\n  result = (%s *)new SwigDirector_%s(arg0%s);\n}\n", name, name, args);
       Delete(args);
 
       wrapperType = directorconstructor;
