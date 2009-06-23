@@ -29,14 +29,24 @@ namespace Swig {
     public:
       Director(zval* self) : swig_self(self) {
       }
+      bool is_overriden_method(char *cname, char *lc_fname) {
+        zval classname;
+        zend_class_entry **ce;
+        zend_function *mptr;
+        int name_len = strlen(lc_fname);
+        
+        ZVAL_STRING(&classname, cname, 0);
+        if (zend_lookup_class(Z_STRVAL_P(&classname), Z_STRLEN_P(&classname), &ce TSRMLS_CC) != SUCCESS) {
+          return false;
+        }
+        if (zend_hash_find(&(*ce)->function_table, lc_fname, name_len + 1, (void**) &mptr) != SUCCESS) {
+          return false;
+        }
+        // common.scope points to the declaring class
+        return strcmp(mptr->common.scope->name, cname);
+      }
   };
 }
-
-/*
- * TODO: Handle the case when not all methods are overwritten in
- * director classes.
- */
-static int upcall;
 
 #endif /* __cplusplus */
 

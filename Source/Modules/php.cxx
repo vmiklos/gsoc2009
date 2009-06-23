@@ -797,6 +797,13 @@ public:
       Delete(args);
       args = NULL;
     }
+    if (is_member_director(n)) {
+      Wrapper_add_local(f, "director", "Swig::Director *director = 0");
+      Printf(f->code, "director = dynamic_cast<Swig::Director*>(arg1);\n");
+      Wrapper_add_local(f, "upcall", "bool upcall = false");
+      Printf(f->code, "upcall = !director->is_overriden_method((char *)\"%s\", (char *)\"%s\");\n",
+	  Swig_class_name(Swig_methodclass(n)), name);
+    }
     // This generated code may be called:
     // 1) as an object method, or
     // 2) as a class-method/function (without a "this_ptr")
@@ -2555,7 +2562,7 @@ public:
       }
 
 
-      Append(w->code, "call_user_function(EG(function_table), &swig_self, &funcname,\n");
+      Append(w->code, "call_user_function(EG(function_table), (zval**)&swig_self, &funcname,\n");
       Printf(w->code, "  result, %d, args TSRMLS_CC);\n", idx);
       /* vmiklos Append(w->code, "#endif\n"); */
 
