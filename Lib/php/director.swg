@@ -46,6 +46,43 @@ namespace Swig {
         return strcmp(mptr->common.scope->name, cname);
       }
   };
+
+  /* base class for director exceptions */
+  class DirectorException {
+  protected:
+    std::string swig_msg;
+  public:
+    DirectorException(int code, const char *hdr, const char* msg)
+      : swig_msg(hdr)
+    {
+      if (strlen(msg)) {
+        swig_msg += " ";
+        swig_msg += msg;
+      }
+      SWIG_ErrorCode() = code;
+      SWIG_ErrorMsg() = swig_msg.c_str();
+    }
+
+    static void raise(int code, const char *hdr, const char* msg) 
+    {
+      throw DirectorException(code, hdr, msg);
+    }
+  };
+
+  /* attempt to call a pure virtual method via a director method */
+  class DirectorPureVirtualException : public Swig::DirectorException
+  {
+  public:
+    DirectorPureVirtualException(const char* msg) 
+      : DirectorException(E_ERROR, "Swig director pure virtual method called", msg)
+    { 
+    }
+
+    static void raise(const char *msg) 
+    {
+      throw DirectorPureVirtualException(msg);
+    }
+  };
 }
 
 #endif /* __cplusplus */
