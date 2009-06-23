@@ -266,7 +266,7 @@ public:
     Node *mod = Getattr(n, "module");
     if (mod) {
       Node *options = Getattr(mod, "options");
-      if (Getattr(options, "directors")) {
+      if (options && Getattr(options, "directors")) {
 	allow_directors();
       }
     }
