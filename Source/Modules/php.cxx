@@ -682,6 +682,25 @@ public:
 
     Wrapper_add_local(f, "argc", "int argc");
 
+    if (Swig_directorclass(n)) {
+      /*
+       * We have an extra 'this' parameter.
+       * TODO: isn't there a better way to handle this?
+       */
+      maxargs++;
+      for (int i = maxargs; i; i--) {
+	String *fro = NewStringf(" %d", i-1);
+	String *to = NewStringf(" %d", i);
+	Replaceall(dispatch, fro, to);
+	Delete(fro);
+	Delete(to);
+	fro = NewStringf("[%d]", i-1);
+	to = NewStringf("[%d]", i);
+	Replaceall(dispatch, fro, to);
+	Delete(fro);
+	Delete(to);
+      }
+    }
     Printf(tmp, "zval **argv[%d]", maxargs);
     Wrapper_add_local(f, "argv", tmp);
 
@@ -804,6 +823,9 @@ public:
       Printf(f->code, "upcall = !director->is_overriden_method((char *)\"%s\", (char *)\"%s\");\n",
 	  Swig_class_name(Swig_methodclass(n)), name);
     }
+
+    Swig_director_emit_dynamic_cast(n, f);
+
     // This generated code may be called:
     // 1) as an object method, or
     // 2) as a class-method/function (without a "this_ptr")
@@ -1466,8 +1488,12 @@ public:
 	      Printf(prepare, "case %d: ", ++last_handled_i);
 	    }
 	    if (Cmp(d, "void") != 0)
-	      Printf(prepare, "$r=");
-	    Printf(prepare, "%s(%s); break;\n", iname, invoke_args);
+	      Printf(prepare, "$this->%s=", SWIG_PTR);
+	    if (!i) {
+	      Printf(prepare, "%s($_this%s); break;\n", iname, invoke_args);
+	    } else {
+	      Printf(prepare, "%s($_this, %s); break;\n", iname, invoke_args);
+	    }
 	  }
 	  if (i || wrapperType == memberfn)
 	    Printf(invoke_args, ",");
@@ -1477,8 +1503,8 @@ public:
 	if (had_a_case)
 	  Printf(prepare, "default: ");
 	if (Cmp(d, "void") != 0)
-	  Printf(prepare, "$r=");
-	Printf(prepare, "%s(%s);\n", iname, invoke_args);
+	  Printf(prepare, "$this->%s=", SWIG_PTR);
+	Printf(prepare, "%s($_this, %s);\n", iname, invoke_args);
 	if (had_a_case)
 	  Printf(prepare, "\t\t}\n");
 	Delete(invoke_args);
@@ -1513,7 +1539,8 @@ public:
 	Printf(output, "\tstatic function %s(%s) {\n", methodname, args);
       }
 
-      Printf(output, "%s", prepare);
+      if (!newobject)
+	Printf(output, "%s", prepare);
       if (newobject) {
 	if (!directorsEnabled() || !Swig_directorclass(n)) {
 	  Printf(output, "\t\t$this->%s=%s;\n", SWIG_PTR, invoke);
@@ -1525,12 +1552,15 @@ public:
 	  Printf(output, "\t\t} else {\n");
 	  Printf(output, "\t\t\t$_this = $this;\n");
 	  Printf(output, "\t\t}\n");
-	  if (num_arguments > 1) {
-	    Printf(output, "\t\t$this->%s=%s($_this, %s);\n", SWIG_PTR, iname, args);
-	  } else {
-	    Printf(output, "\t\t$this->%s=%s($_this);\n", SWIG_PTR, iname);
+	  if (!Len(prepare)) {
+	    if (num_arguments > 1) {
+	      Printf(output, "\t\t$this->%s=%s($_this, %s);\n", SWIG_PTR, iname, args);
+	    } else {
+	      Printf(output, "\t\t$this->%s=%s($_this);\n", SWIG_PTR, iname);
+	    }
 	  }
 	}
+	Printf(output, "%s", prepare);
       } else if (Cmp(d, "void") == 0) {
 	if (Cmp(invoke, "$r") != 0)
 	  Printf(output, "\t\t%s;\n", invoke);
@@ -2115,6 +2145,8 @@ public:
     constructors++;
     if (Swig_directorclass(n)) {
       String *name = GetChar(Swig_methodclass(n), "name");
+      String *ctype = GetChar(Swig_methodclass(n), "classtype");
+      String *sname = GetChar(Swig_methodclass(n), "sym:name");
       String *args = NewString("");
       ParmList *p = Getattr(n, "parms");
       int i;
@@ -2122,6 +2154,9 @@ public:
       for (i = 0; p; p = nextSibling(p), i++) {
 	if (i) {
 	  Printf(args, ", ");
+	}
+	if (Strcmp(GetChar(p, "type"), SwigType_str(GetChar(p, "type"), 0))) {
+	    Printf(args, "(%s)", SwigType_str(GetChar(p, "type"), 0));
 	}
 	Printf(args, "arg%d", i+1);
       }
@@ -2132,13 +2167,13 @@ public:
       director_prot_ctor_code = NewString("");
       Printf(director_ctor_code, "if ( arg0->type == IS_NULL ) { /* not subclassed */\n");
       Printf(director_prot_ctor_code, "if ( arg0->type == IS_NULL ) { /* not subclassed */\n");
-      Printf(director_ctor_code, "  result = (%s *)new %s(%s);\n", name, name, args);
+      Printf(director_ctor_code, "  result = (%s *)new %s(%s);\n", ctype, sname, args);
       Printf(director_prot_ctor_code, "  SWIG_PHP_Error(E_ERROR, \"accessing abstract class or protected constructor\");\n", name, name, args);
       if (i) {
 	Insert(args, 0, ", ");
       }
-      Printf(director_ctor_code, "} else {\n  result = (%s *)new SwigDirector_%s(arg0%s);\n}\n", name, name, args);
-      Printf(director_prot_ctor_code, "} else {\n  result = (%s *)new SwigDirector_%s(arg0%s);\n}\n", name, name, args);
+      Printf(director_ctor_code, "} else {\n  result = (%s *)new SwigDirector_%s(arg0%s);\n}\n", ctype, sname, args);
+      Printf(director_prot_ctor_code, "} else {\n  result = (%s *)new SwigDirector_%s(arg0%s);\n}\n", ctype, sname, args);
       Delete(args);
 
       wrapperType = directorconstructor;
@@ -2557,18 +2592,9 @@ public:
       /* wrap complex arguments to PyObjects */
       Printv(w->code, wrap_args, NIL);
 
-      /* pass the method call on to the Python object */
-      if (dirprot_mode() && !is_public(n)) {
-	Printf(w->code, "swig_set_inner(\"%s\", true);\n", name);
-      }
-
-
       Append(w->code, "call_user_function(EG(function_table), (zval**)&swig_self, &funcname,\n");
       Printf(w->code, "  result, %d, args TSRMLS_CC);\n", idx);
       /* vmiklos Append(w->code, "#endif\n"); */
-
-      if (dirprot_mode() && !is_public(n))
-	Printf(w->code, "swig_set_inner(\"%s\", false);\n", name);
 
       /* exception handling */
       tm = Swig_typemap_lookup("director:except", n, "result", 0);
