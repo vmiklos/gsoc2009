@@ -256,8 +256,7 @@
 %typemap(directorin) SWIGTYPE
 #ifdef __cplusplus
 {
-  $&1_ltype resultobj = new $1_ltype((const $1_ltype &) $1);
-  SWIG_SetPointerZval($input, (void *)resultobj, $&1_descriptor, 1);
+  SWIG_SetPointerZval($input, SWIG_as_voidptr($1), $&1_descriptor, 1);
 }
 #else
 {

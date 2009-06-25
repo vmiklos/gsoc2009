@@ -2475,7 +2475,7 @@ public:
 	if ((tm = Swig_typemap_lookup("directorin", n, pname, w)) != 0) {
 	  String *parse = Getattr(p, "tmap:directorin:parse");
 	  if (!parse) {
-	    sprintf(source, "arg%d", idx++);
+	    sprintf(source, "obj%d", idx++);
 	    String *input = NewStringf("&%s", source);
 	    Replaceall(tm, "$input", input);
 	    Delete(input);

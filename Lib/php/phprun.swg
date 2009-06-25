@@ -84,6 +84,7 @@ typedef struct _swig_object_wrapper {
 static ZEND_RSRC_DTOR_FUNC(SWIG_landfill) { (void)rsrc; }
 
 #define SWIG_SetPointerZval(a,b,c,d) SWIG_ZTS_SetPointerZval(a,b,c,d TSRMLS_CC)
+#define SWIG_as_voidptr(a) const_cast< void * >(static_cast< const void * >(a))
 
 static void
 SWIG_ZTS_SetPointerZval(zval *z, void *ptr, swig_type_info *type, int newobject TSRMLS_DC) {
