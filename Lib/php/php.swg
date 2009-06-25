@@ -89,6 +89,14 @@
 	$1 = *tmp;
 }
 
+%typemap(directorout) SWIGTYPE ($&1_ltype tmp)
+{
+	if(SWIG_ConvertPtr(*$input, (void **) &tmp, $&1_descriptor, 0) < 0 || tmp == NULL) {
+          SWIG_PHP_Error(E_ERROR, "Type error in argument $argnum of $symname. Expected $&1_descriptor");
+	}
+	$result = *tmp;
+}
+
 %typemap(in) SWIGTYPE *,
 	     SWIGTYPE []
 {
@@ -242,6 +250,20 @@
   $&1_ltype resultobj = ($&1_ltype) emalloc(sizeof($1_type));
   memcpy(resultobj, &$1, sizeof($1_type));
   SWIG_SetPointerZval(return_value, (void *)resultobj, $&1_descriptor, 1);
+}
+#endif
+
+%typemap(directorin) SWIGTYPE
+#ifdef __cplusplus
+{
+  $&1_ltype resultobj = new $1_ltype((const $1_ltype &) $1);
+  SWIG_SetPointerZval($input, (void *)resultobj, $&1_descriptor, 1);
+}
+#else
+{
+  $&1_ltype resultobj = ($&1_ltype) emalloc(sizeof($1_type));
+  memcpy(resultobj, &$1, sizeof($1_type));
+  SWIG_SetPointerZval($input, (void *)resultobj, $&1_descriptor, 1);
 }
 #endif
 
