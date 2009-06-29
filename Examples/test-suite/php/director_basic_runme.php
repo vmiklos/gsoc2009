@@ -33,11 +33,12 @@ $a = new A1(1);
 check::equal($a->rg(2), 2, "rg failed");
 
 class PhpClass extends MyClass {
-  function method($vptr) {
-    $this->cmethod = 7;
-  }
-
   function vmethod($b) {
+    // TODO: This has to be done in the wrapper code using Zend API 
+    // calls to hide it from the user.
+    $b = new Bar($b);
+    $b->thisown = 0;
+
     $b->x = $b->x + 31;
     return $b;
   }
@@ -47,15 +48,14 @@ $b = new Bar(3);
 $d = new MyClass();
 $c = new PhpClass();
 
-$cc = MyClass_get_self($c);
-$dd = MyClass_get_self($d);
+$cc = MyClass::get_self($c);
+$dd = MyClass::get_self($d);
 
 $bc = $cc->cmethod($b);
 $bd = $dd->cmethod($b);
 
 $cc->method($b);
 
-check::equal($c->cmethod, 7, "c failed");
 check::equal($bc->x, 34, "bc failed");
 check::equal($bd->x, 16, "bd failed");
 

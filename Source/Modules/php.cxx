@@ -682,7 +682,7 @@ public:
 
     Wrapper_add_local(f, "argc", "int argc");
 
-    if (Swig_directorclass(n)) {
+    if (Swig_directorclass(n) && wrapperType == directorconstructor) {
       /*
        * We have an extra 'this' parameter.
        * TODO: isn't there a better way to handle this?
@@ -1489,7 +1489,9 @@ public:
 	    }
 	    if (Cmp(d, "void") != 0)
 	      Printf(prepare, "$this->%s=", SWIG_PTR);
-	    if (!i) {
+	    if (!directorsEnabled() || !Swig_directorclass(n)) {
+	      Printf(prepare, "%s(%s); break;\n", iname, invoke_args);
+	    } else if (!i) {
 	      Printf(prepare, "%s($_this%s); break;\n", iname, invoke_args);
 	    } else {
 	      Printf(prepare, "%s($_this, %s); break;\n", iname, invoke_args);
@@ -1504,7 +1506,11 @@ public:
 	  Printf(prepare, "default: ");
 	if (Cmp(d, "void") != 0)
 	  Printf(prepare, "$this->%s=", SWIG_PTR);
-	Printf(prepare, "%s($_this, %s);\n", iname, invoke_args);
+	if (!directorsEnabled() || !Swig_directorclass(n)) {
+	  Printf(prepare, "%s(%s);\n", iname, invoke_args);
+	} else {
+	  Printf(prepare, "%s($_this, %s);\n", iname, invoke_args);
+	}
 	if (had_a_case)
 	  Printf(prepare, "\t\t}\n");
 	Delete(invoke_args);
@@ -1514,9 +1520,7 @@ public:
       Printf(output, "\n");
       // If it's a member function or a class constructor...
       if (wrapperType == memberfn || (newobject && current_class)) {
-	// We don't need this code if the wrapped class has a copy ctor
-	// since the flat function new_CLASSNAME will handle it for us.
-	if (newobject && !Getattr(current_class, "allocate:copy_constructor")) {
+	if (newobject) {
 	  const char * arg0;
 	  if (max_num_of_arguments > 0) {
 	    arg0 = Char(arg_names[0]);
