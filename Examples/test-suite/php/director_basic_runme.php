@@ -34,11 +34,6 @@ check::equal($a->rg(2), 2, "rg failed");
 
 class PhpClass extends MyClass {
   function vmethod($b) {
-    // TODO: This has to be done in the wrapper code using Zend API 
-    // calls to hide it from the user.
-    $b = new Bar($b);
-    $b->thisown = 0;
-
     $b->x = $b->x + 31;
     return $b;
   }

@@ -13,6 +13,7 @@ extern "C" {
 #include "zend.h"
 #include "zend_API.h"
 #include "php.h"
+#include "ext/standard/php_string.h"
 
 #ifdef ZEND_RAW_FENTRY
 /* ZEND_RAW_FENTRY was added somewhere between 5.2.0 and 5.2.3 */
@@ -102,7 +103,31 @@ SWIG_ZTS_SetPointerZval(zval *z, void *ptr, swig_type_info *type, int newobject 
     value=(swig_object_wrapper *)emalloc(sizeof(swig_object_wrapper));
     value->ptr=ptr;
     value->newobject=newobject;
-    ZEND_REGISTER_RESOURCE(z, value, *(int *)(type->clientdata));
+    if (newobject <= 1) {
+      ZEND_REGISTER_RESOURCE(z, value, *(int *)(type->clientdata));
+    } else {
+      value->newobject = 0;
+      zval *resource;
+      MAKE_STD_ZVAL(resource);
+      ZEND_REGISTER_RESOURCE(resource, value, *(int *)(type->clientdata));
+      zend_class_entry **ce = NULL;
+      zval *classname;
+      MAKE_STD_ZVAL(classname);
+      /* _p_Foo -> Foo */
+      ZVAL_STRING(classname, (char*)type->name+3, 1);
+      /* class names are stored in lowercase */
+      php_strtolower(Z_STRVAL_PP(&classname), Z_STRLEN_PP(&classname));
+      if (zend_lookup_class(Z_STRVAL_P(classname), Z_STRLEN_P(classname), &ce TSRMLS_CC) != SUCCESS) {
+        /* class does not exists */
+        object_init(z);
+      } else {
+        object_init_ex(z, *ce);
+      }
+      z->refcount = 1;
+      z->is_ref = 1;
+      zend_hash_update(HASH_OF(z), (char*)"_cPtr", sizeof("_cPtr"), (void*)&resource, sizeof(zval), NULL);
+      FREE_ZVAL(classname);
+    }
     return;
   }
   zend_error(E_ERROR, "Type: %s not registered with zend",type->name);

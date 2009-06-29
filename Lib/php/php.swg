@@ -256,13 +256,13 @@
 %typemap(directorin) SWIGTYPE
 #ifdef __cplusplus
 {
-  SWIG_SetPointerZval($input, SWIG_as_voidptr(&$1), $&1_descriptor, 1);
+  SWIG_SetPointerZval($input, SWIG_as_voidptr(&$1), $&1_descriptor, 2);
 }
 #else
 {
   $&1_ltype resultobj = ($&1_ltype) emalloc(sizeof($1_type));
   memcpy(resultobj, &$1, sizeof($1_type));
-  SWIG_SetPointerZval($input, (void *)resultobj, $&1_descriptor, 1);
+  SWIG_SetPointerZval($input, (void *)resultobj, $&1_descriptor, 2);
 }
 #endif
 
