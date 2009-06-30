@@ -196,7 +196,7 @@
               size_t,
               enum SWIGTYPE
 {
-  ZVAL_LONG($input,$1);
+  ZVAL_LONG($input,$1_name);
 }
 
 %typemap(out) bool
@@ -232,6 +232,13 @@
   SWIG_SetPointerZval(return_value, (void *)$1, $1_descriptor, $owner);
 %}
 
+%typemap(directorin) SWIGTYPE *,
+              SWIGTYPE [],
+              SWIGTYPE &
+%{
+  SWIG_SetPointerZval($input, (void *)&$1_name, $1_descriptor, $owner);
+%}
+
 %typemap(out) SWIGTYPE *DYNAMIC,
               SWIGTYPE &DYNAMIC
 {
@@ -256,7 +263,7 @@
 %typemap(directorin) SWIGTYPE
 #ifdef __cplusplus
 {
-  SWIG_SetPointerZval($input, SWIG_as_voidptr(&$1), $&1_descriptor, 2);
+  SWIG_SetPointerZval($input, SWIG_as_voidptr(&$1_name), $&1_descriptor, 2);
 }
 #else
 {

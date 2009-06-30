@@ -49,7 +49,7 @@ namespace std {
     %}
 
     %typemap(directorin) string %{
-        ZVAL_STRINGL($input, const_cast<char*>($1.data()), $1.size(), 1);
+        ZVAL_STRINGL($input, const_cast<char*>($1_name.data()), $1_name.size(), 1);
     %}
 
     %typemap(out) const string & %{

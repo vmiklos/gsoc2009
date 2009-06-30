@@ -1489,7 +1489,7 @@ public:
 	    }
 	    if (Cmp(d, "void") != 0)
 	      Printf(prepare, "$this->%s=", SWIG_PTR);
-	    if (!directorsEnabled() || !Swig_directorclass(n)) {
+	    if (!directorsEnabled() || !Swig_directorclass(n) || !newobject) {
 	      Printf(prepare, "%s(%s); break;\n", iname, invoke_args);
 	    } else if (!i) {
 	      Printf(prepare, "%s($_this%s); break;\n", iname, invoke_args);
@@ -1506,7 +1506,7 @@ public:
 	  Printf(prepare, "default: ");
 	if (Cmp(d, "void") != 0)
 	  Printf(prepare, "$this->%s=", SWIG_PTR);
-	if (!directorsEnabled() || !Swig_directorclass(n)) {
+	if (!directorsEnabled() || !Swig_directorclass(n) || !newobject) {
 	  Printf(prepare, "%s(%s);\n", iname, invoke_args);
 	} else {
 	  Printf(prepare, "%s($_this, %s);\n", iname, invoke_args);
@@ -2476,7 +2476,7 @@ public:
 	String *ptype = Getattr(p, "type");
 
 	Putc(',', arglist);
-	if ((tm = Swig_typemap_lookup("directorin", n, pname, w)) != 0) {
+	if ((tm = Getattr(p, "tmap:directorin")) != 0) {
 	  String *parse = Getattr(p, "tmap:directorin:parse");
 	  if (!parse) {
 	    sprintf(source, "obj%d", idx++);
