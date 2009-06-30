@@ -32,7 +32,7 @@ class MyBar extends Bar {
 
   /* clone is a reserved keyword */
   function clone_() {
-    return MyBar($this->val);
+    return new MyBar($this->val);
   }
 }
 
