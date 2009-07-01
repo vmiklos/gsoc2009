@@ -1578,7 +1578,26 @@ public:
 	if (Cmp(invoke, "$r") != 0)
 	  Printf(output, "\t\t$r=%s;\n", invoke);
 	if (Len(ret_types) == 1) {
-	  Printf(output, "\t\treturn is_resource($r) ? new %s%s($r) : $r;\n", prefix, Getattr(classLookup(d), "sym:name"));
+	  /* If it has an abstract base, then we can't create a new
+	   * base object. */
+	  int hasabstractbase = 0;
+	  Node *bases = Getattr(Swig_methodclass(n), "bases");
+	  if (bases) {
+	    Iterator i = First(bases);
+	    while(i.item) {
+	      if (Getattr(i.item, "abstract")) {
+		hasabstractbase = 1;
+		break;
+	      }
+	      i = Next(i);
+	    }
+	  }
+	  if (newobject || !hasabstractbase) {
+	    Printf(output, "\t\treturn is_resource($r) ? new %s%s($r) : $r;\n", prefix, Getattr(classLookup(d), "sym:name"));
+	  } else {
+	    Printf(output, "\t\t$this->%s = $r;\n", SWIG_PTR);
+	    Printf(output, "\t\treturn $this;\n");
+	  }
 	} else {
 	  Printf(output, "\t\tif (!is_resource($r)) return $r;\n");
 	  Printf(output, "\t\tswitch (get_resource_type($r)) {\n");
