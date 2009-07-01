@@ -749,6 +749,7 @@ public:
     ParmList *l = Getattr(n, "parms");
     String *nodeType = Getattr(n, "nodeType");
     int newobject = GetFlag(n, "feature:new");
+    int constructor = (!Cmp(nodeType, "constructor"));
 
     Parm *p;
     int i;
@@ -1044,7 +1045,7 @@ public:
       // Method or static method or plain function.
       const char *methodname = 0;
       String *output = s_oowrappers;
-      if (newobject) {
+      if (constructor) {
 	class_has_ctor = true;
 	methodname = "__construct";
       } else if (wrapperType == memberfn) {
@@ -1519,8 +1520,8 @@ public:
 
       Printf(output, "\n");
       // If it's a member function or a class constructor...
-      if (wrapperType == memberfn || (newobject && current_class)) {
-	if (newobject) {
+      if (wrapperType == memberfn || (constructor && current_class)) {
+	if (constructor) {
 	  const char * arg0;
 	  if (max_num_of_arguments > 0) {
 	    arg0 = Char(arg_names[0]);
@@ -1545,7 +1546,7 @@ public:
 
       if (!newobject)
 	Printf(output, "%s", prepare);
-      if (newobject) {
+      if (constructor) {
 	if (!directorsEnabled() || !Swig_directorclass(n)) {
 	  Printf(output, "\t\t$this->%s=%s;\n", SWIG_PTR, invoke);
 	} else {
