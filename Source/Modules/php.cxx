@@ -473,6 +473,11 @@ public:
     Printf(s_header, "}\n");
     Printf(s_header, "#endif\n\n");
 
+    if (directorsEnabled()) {
+      // Insert director runtime
+      Swig_insert_file("director.swg", s_header);
+    }
+
     /* Create the .h file too */
     filen = NewStringEmpty();
     Printv(filen, SWIG_output_directory(), "php_", module, ".h", NIL);
@@ -623,8 +628,6 @@ public:
     Dump(f_runtime, f_begin);
     Printv(f_begin, s_header, NIL);
     if (directorsEnabled()) {
-      // Insert director runtime
-      Swig_insert_file("director.swg", f_begin);
       Dump(f_directors, f_begin);
     }
     Printv(f_begin, s_vdecl, s_wrappers, NIL);

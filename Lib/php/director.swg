@@ -13,6 +13,8 @@
 
 #ifdef __cplusplus
 
+#include <string>
+
 /*
   Use -DSWIG_DIRECTOR_STATIC if you prefer to avoid the use of the
   'Swig' namespace. This could be useful for multi-modules projects.
