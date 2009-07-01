@@ -62,6 +62,11 @@ PHP Options (available with -php)\n\
  */
 #define SWIG_PTR "_cPtr"
 
+/* This is the name of the hash where the variables existing only in PHP
+ * classes are stored.
+ */
+#define SWIG_DATA "_pData"
+
 static int constructors = 0;
 static String *NOTCLASS = NewString("Not a class");
 static Node *classnode = 0;
@@ -1876,13 +1881,13 @@ public:
 	Printf(s_phpclasses, "extends %s%s ", prefix, baseclass);
       }
       Printf(s_phpclasses, "{\n\tpublic $%s=null;\n", SWIG_PTR);
+      Printf(s_phpclasses, "\tprotected $%s=array();\n", SWIG_DATA);
 
       // Write property SET handlers
       ki = First(shadow_set_vars);
 
       if (ki.key) {
 	// This class has setters.
-	// FIXME: just ignore setting an unknown property name for now.
 	Printf(s_phpclasses, "\n\tfunction __set($var,$value) {\n");
 	// FIXME: tune this threshold...
 	if (Len(shadow_set_vars) <= 2) {
@@ -1897,6 +1902,7 @@ public:
 	  Printf(s_phpclasses, "\t\tif (function_exists($func)) return call_user_func($func,$this->%s,$value);\n", SWIG_PTR);
 	}
 	Printf(s_phpclasses, "\t\tif ($var == 'thisown') return swig_%s_alter_newobject($this->%s,$value);\n", module, SWIG_PTR);
+	Printf(s_phpclasses, "\t\telse $this->%s[$var] = $value;\n", SWIG_DATA);
 	if (base.item) {
 	  Printf(s_phpclasses, "\t\treturn %s%s::__set($var,$value);\n", prefix, baseclass);
 	}
@@ -1904,30 +1910,18 @@ public:
 
 	/* Create __isset for PHP 5.1 and later; PHP 5.0 will just ignore it. */
 	Printf(s_phpclasses, "\n\tfunction __isset($var) {\n");
+	Printf(s_phpclasses, "\t\tif (function_exists('%s_'.$var.'_set')) return true;\n", shadow_classname);
 	Printf(s_phpclasses, "\t\tif ($var == 'thisown') return true;\n");
-	// FIXME: tune this threshold, but it should probably be different to
-	// that for __set() and __get() as we don't need to call_user_func()
-	// here...
-	if (Len(shadow_set_vars) == 1) {
-	  // Only one setter, so just check the name.
-	  Printf(s_phpclasses, "\t\treturn ");
-	  while (ki.key) {
-	      key = ki.key;
-	      Printf(s_phpclasses, "$var == '%s'", ki.key);
-	      ki = Next(ki);
-	      if (ki.key) Printf(s_phpclasses, " || ");
-	  }
-	  Printf(s_phpclasses, ";\n");
-	} else {
-	  Printf(s_phpclasses, "\t\treturn function_exists('%s_'.$var.'_set');\n", shadow_classname);
-	}
+	Printf(s_phpclasses, "\t\telse return array_key_exists($var, $this->%s);\n", SWIG_DATA);
 	Printf(s_phpclasses, "\t}\n");
       } else {
 	Printf(s_phpclasses, "\n\tfunction __set($var,$value) {\n");
 	Printf(s_phpclasses, "\t\tif ($var == 'thisown') return swig_%s_alter_newobject($this->%s,$value);\n", module, SWIG_PTR);
+	Printf(s_phpclasses, "\t\telse $this->%s[$var] = $value;\n", SWIG_DATA);
 	Printf(s_phpclasses, "\t}\n");
 	Printf(s_phpclasses, "\n\tfunction __isset($var) {\n");
-	Printf(s_phpclasses, "\t\treturn $var == 'thisown';\n");
+	Printf(s_phpclasses, "\t\tif ($var == 'thisown') return true;\n");
+	Printf(s_phpclasses, "\t\telse return array_key_exists($var, $this->%s);\n", SWIG_DATA);
 	Printf(s_phpclasses, "\t}\n");
       }
       // Write property GET handlers
@@ -1948,13 +1942,19 @@ public:
 	  Printf(s_phpclasses, "\t\t$func = '%s_'.$var.'_get';\n", shadow_classname);
 	  Printf(s_phpclasses, "\t\tif (function_exists($func)) return call_user_func($func,$this->%s);\n", SWIG_PTR);
 	}
-	Printf(s_phpclasses, "\t\tif ($var == 'thisown') return swig_%s_get_newobject($this->%s);\n", module, SWIG_PTR);
+	Printf(s_phpclasses, "\t\telse if ($var == 'thisown') return swig_%s_get_newobject($this->%s);\n", module, SWIG_PTR);
+	Printf(s_phpclasses, "\t\telse if(array_key_exists($var, $this->%s)) $this->%s[$var];\n", SWIG_DATA, SWIG_DATA);
 	// Reading an unknown property name gives null in PHP.
 	if (base.item) {
 	  Printf(s_phpclasses, "\t\treturn %s%s::__get($var);\n", prefix, baseclass);
 	} else {
 	  Printf(s_phpclasses, "\t\treturn null;\n");
 	}
+	Printf(s_phpclasses, "\t}\n");
+      } else {
+	Printf(s_phpclasses, "\n\tfunction __get($var) {\n");
+	Printf(s_phpclasses, "\t\tif ($var == 'thisown') return swig_example_get_newobject($this->%s);\n", SWIG_PTR);
+	Printf(s_phpclasses, "\t\telse return $this->%s[$var];\n", SWIG_DATA);
 	Printf(s_phpclasses, "\t}\n");
       }
 
