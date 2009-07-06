@@ -1600,7 +1600,7 @@ public:
 	     * _p_Foo -> Foo, _p_ns__Bar -> Bar
 	     * TODO: do this in a more elegant way
 	     */
-	    Printf(output, "\t\tif (is_resource($r)) $class=substr(get_resource_type($r), (strpos(get_resource_type($r), \"__\") ? strpos(get_resource_type($r), \"__\") + 2 : 3));\n");
+	    Printf(output, "\t\tif (is_resource($r)) $class='%s'.substr(get_resource_type($r), (strpos(get_resource_type($r), \"__\") ? strpos(get_resource_type($r), \"__\") + 2 : 3));\n", prefix);
 	    Printf(output, "\t\treturn is_resource($r) ? new $class($r) : $r;\n");
 	  } else {
 	    Printf(output, "\t\t$this->%s = $r;\n", SWIG_PTR);
