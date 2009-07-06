@@ -2731,13 +2731,14 @@ public:
 	thread_end_block(n, w->code);
       }*/
 
+      Append(w->code, "FREE_ZVAL(result);\n");
+
       Delete(parse_args);
       Delete(arglist);
       Delete(cleanup);
       Delete(outarg);
     }
 
-    Append(w->code, "FREE_ZVAL(result);\n");
     if (!is_void) {
       if (!(ignored_method && !pure_virtual)) {
 	String *rettype = SwigType_str(return_type, 0);
