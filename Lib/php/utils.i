@@ -39,7 +39,7 @@
 %}
 %typemap(directorout) TYPE, const TYPE &
 %{
-  CONVERT_IN($result,TYPE,$input);
+  CONVERT_IN($result,$1_ltype,$input);
 %}
 %enddef
 

@@ -2199,7 +2199,7 @@ public:
       director_prot_ctor_code = NewString("");
       Printf(director_ctor_code, "if ( arg0->type == IS_NULL ) { /* not subclassed */\n");
       Printf(director_prot_ctor_code, "if ( arg0->type == IS_NULL ) { /* not subclassed */\n");
-      Printf(director_ctor_code, "  result = (%s *)new %s(%s);\n", ctype, sname, args);
+      Printf(director_ctor_code, "  result = (%s *)new %s(%s);\n", ctype, name, args);
       Printf(director_prot_ctor_code, "  SWIG_PHP_Error(E_ERROR, \"accessing abstract class or protected constructor\");\n", name, name, args);
       if (i) {
 	Insert(args, 0, ", ");
