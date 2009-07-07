@@ -1906,6 +1906,8 @@ public:
 	if (!baseclass)
 	  baseclass = Getattr(base.item, "name");
 	Printf(s_phpclasses, "extends %s%s ", prefix, baseclass);
+      } else if (GetFlag(n, "feature:exceptionclass")) {
+	Append(s_phpclasses, "extends Exception ");
       }
       Printf(s_phpclasses, "{\n\tpublic $%s=null;\n", SWIG_PTR);
       Printf(s_phpclasses, "\tprotected $%s=array();\n", SWIG_DATA);
