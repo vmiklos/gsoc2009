@@ -13,7 +13,9 @@ check::globals(array());
 class MyFoo extends Foo {
   function __destruct() {
     $this->orStatus(2);
-    deleteFoo($this);
+    if (method_exists(parent, "__destruct")) {
+      parent::__destruct();
+    }
   }
 }
 
@@ -38,18 +40,20 @@ check::equal(getStatus(), 3, "getStatus() failed #3");
 resetStatus();
 
 $a = new MyFoo();
-$a->thisown = 1;
+$a->thisown = 0;
 deleteFoo($a);
+unset($a);
 
 check::equal(getStatus(), 3, "getStatus() failed #4");
 
 resetStatus();
 
 $a = new MyFoo();
-$a->thisown = 1;
+$a->thisown = 0;
 deleteFoo(launder($a));
+unset($a);
 
-check::equal(getStatus(), 3, "getStatus() failed #4");
+check::equal(getStatus(), 3, "getStatus() failed #5");
 
 resetStatus();
 
