@@ -89,7 +89,7 @@ namespace Swig {
   class DirectorMethodException : public Swig::DirectorException
   {
   public:
-    DirectorMethodException(const char* msg) 
+    DirectorMethodException(const char* msg = "") 
       : DirectorException(E_ERROR, "Swig director method error", msg)
     { 
     }

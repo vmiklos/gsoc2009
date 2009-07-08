@@ -37,7 +37,9 @@ $a = new MyFoo();
 $a->tping("hello");
 $a->tpong("hello");
 
-$p = array(1, 2);
+# TODO: automatic conversion between PHP arrays and std::pair or 
+# std::vector is not yet implemented.
+/*$p = array(1, 2);
 $a->pident($p);
 $v = array(3, 4);
 $a->vident($v);
@@ -52,7 +54,7 @@ $a->tvsecond($v1, $v2);
 
 $vs = array("hi", "hello");
 $vs;
-$a->tvidents($vs);
+$a->tvidents($vs);*/
 
 check::done();
 ?>

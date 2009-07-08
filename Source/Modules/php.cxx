@@ -2266,6 +2266,9 @@ public:
     Append(f->code, actioncode);
     Delete(actioncode);
 
+    Append(f->code, "return;\n");
+    Append(f->code, "fail:\n");
+    Append(f->code, "zend_error(SWIG_ErrorCode(),\"%s\",SWIG_ErrorMsg());\n");
     Printf(f->code, "}\n");
 
     Wrapper_print(f, s_wrappers);
@@ -2601,6 +2604,7 @@ public:
 	}
 	p = nextSibling(p);
       }
+      Append(w->code, "int error;\n");
       if (!idx) {
 	Printf(w->code, "zval **args = NULL;\n", idx);
       } else {
