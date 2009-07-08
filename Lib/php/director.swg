@@ -85,6 +85,20 @@ namespace Swig {
       throw DirectorPureVirtualException(msg);
     }
   };
+  /* any php exception that occurs during a director method call */
+  class DirectorMethodException : public Swig::DirectorException
+  {
+  public:
+    DirectorMethodException(const char* msg) 
+      : DirectorException(E_ERROR, "Swig director method error", msg)
+    { 
+    }
+
+    static void raise(const char *msg) 
+    {
+      throw DirectorMethodException(msg);
+    }
+  };
 }
 
 #endif /* __cplusplus */
