@@ -833,8 +833,6 @@ public:
 	  Swig_class_name(Swig_methodclass(n)), name);
     }
 
-    Swig_director_emit_dynamic_cast(n, f);
-
     // This generated code may be called:
     // 1) as an object method, or
     // 2) as a class-method/function (without a "this_ptr")
@@ -921,6 +919,8 @@ public:
       }
       Delete(source);
     }
+
+    Swig_director_emit_dynamic_cast(n, f);
 
     /* Insert constraint checking code */
     for (p = l; p;) {
