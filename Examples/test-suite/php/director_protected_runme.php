@@ -4,14 +4,14 @@ require "tests.php";
 require "director_protected.php";
 
 // No new functions
-check::functions(array(foo_pong,foo_s,foo_q,bar_create,bar_pong,bar_used));
+check::functions(array(foo_pong,foo_s,foo_q,foo_ping,foo_pang,foo_used,bar_create,bar_pong,bar_used,bar_ping,bar_pang,a_draw,b_draw));
 // No new classes
 check::classes(array(Foo,Bar,PrivateFoo,A,B,AA,BB));
 // now new vars
 check::globals(array(bar_a));
 
 class FooBar extends Bar {
-  function ping() {
+  protected function ping() {
     return "FooBar::ping();";
   }
 }
