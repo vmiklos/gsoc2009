@@ -72,6 +72,12 @@ namespace std {
         $1 = &temp;
     %}
 
+    %typemap(directorout) string & (std::string temp) %{
+        convert_to_string_ex($input);
+        temp.assign(Z_STRVAL_PP($input), Z_STRLEN_PP($input));
+        $result = &temp;
+    %}
+
     %typemap(argout) string & %{
 	ZVAL_STRINGL(*($input), const_cast<char*>($1->data()), $1->size(), 1);
     %}
