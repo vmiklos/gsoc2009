@@ -14,6 +14,7 @@
 #ifdef __cplusplus
 
 #include <string>
+#include <map>
 
 /*
   Use -DSWIG_DIRECTOR_STATIC if you prefer to avoid the use of the
@@ -25,12 +26,95 @@
 #endif
 
 namespace Swig {
+  /* memory handler */
+  struct GCItem
+  {
+    virtual ~GCItem() {}
+
+    virtual int get_own() const
+    {
+      return 0;
+    }
+  };
+
+  struct GCItem_var
+  {
+    GCItem_var(GCItem *item = 0) : _item(item)
+    {
+    }
+
+    GCItem_var& operator=(GCItem *item)
+    {
+      GCItem *tmp = _item;
+      _item = item;
+      delete tmp;
+      return *this;
+    }
+
+    ~GCItem_var()
+    {
+      delete _item;
+    }
+
+    GCItem * operator->() const
+    {
+      return _item;
+    }
+
+    private:
+    GCItem *_item;
+  };
+
+  struct GCItem_Object : GCItem
+  {
+    GCItem_Object(int own) : _own(own)
+    {
+    }
+
+    virtual ~GCItem_Object()
+    {
+    }
+
+    int get_own() const
+    {
+      return _own;
+    }
+
+    private:
+    int _own;
+  };
+
+  template <typename Type>
+  struct GCItem_T : GCItem
+  {
+    GCItem_T(Type *ptr) : _ptr(ptr)
+    {
+    }
+
+    virtual ~GCItem_T()
+    {
+      delete _ptr;
+    }
+
+    private:
+    Type *_ptr;
+  };
+
   class Director {
     protected:
       zval *swig_self;
+      typedef std::map<void*, GCItem_var> ownership_map;
+      mutable ownership_map owner;
     public:
       Director(zval* self) : swig_self(self) {
       }
+
+      ~Director() {
+        for (ownership_map::iterator i = owner.begin(); i != owner.end(); i++) {
+          owner.erase(i);
+        }
+      }
+
       bool is_overriden_method(char *cname, char *lc_fname) {
         zval classname;
         zend_class_entry **ce;
@@ -47,11 +131,12 @@ namespace Swig {
         // common.scope points to the declaring class
         return strcmp(mptr->common.scope->name, cname);
       }
-      void swig_acquire_ownership(void *vptr) const
+
+      template <typename Type>
+      void swig_acquire_ownership(Type *vptr) const
       {
         if (vptr) {
-          // TODO: register it to a vector and free them in
-          // destroy_globals()
+          owner[vptr] = new GCItem_T<Type>(vptr);
         }
       }
   };
