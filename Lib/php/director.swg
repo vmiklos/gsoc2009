@@ -47,6 +47,13 @@ namespace Swig {
         // common.scope points to the declaring class
         return strcmp(mptr->common.scope->name, cname);
       }
+      void swig_acquire_ownership(void *vptr) const
+      {
+        if (vptr) {
+          // TODO: register it to a vector and free them in
+          // destroy_globals()
+        }
+      }
   };
 
   /* base class for director exceptions */

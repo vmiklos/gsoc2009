@@ -1973,7 +1973,7 @@ public:
 	  Printf(s_phpclasses, "\t\tif (function_exists($func)) return call_user_func($func,$this->%s);\n", SWIG_PTR);
 	}
 	Printf(s_phpclasses, "\t\telse if ($var == 'thisown') return swig_%s_get_newobject($this->%s);\n", module, SWIG_PTR);
-	Printf(s_phpclasses, "\t\telse if(array_key_exists($var, $this->%s)) $this->%s[$var];\n", SWIG_DATA, SWIG_DATA);
+	Printf(s_phpclasses, "\t\telse if(array_key_exists($var, $this->%s)) return $this->%s[$var];\n", SWIG_DATA, SWIG_DATA);
 	// Reading an unknown property name gives null in PHP.
 	if (base.item) {
 	  Printf(s_phpclasses, "\t\treturn %s%s::__get($var);\n", prefix, baseclass);

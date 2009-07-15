@@ -72,10 +72,12 @@ namespace std {
         $1 = &temp;
     %}
 
-    %typemap(directorout) string & (std::string temp) %{
+    %typemap(directorout) string & (std::string *temp) %{
         convert_to_string_ex($input);
-        temp.assign(Z_STRVAL_PP($input), Z_STRLEN_PP($input));
-        $result = &temp;
+        temp = new std::string;
+        temp->assign(Z_STRVAL_PP($input), Z_STRLEN_PP($input));
+        swig_acquire_ownership(temp);
+        $result = temp;
     %}
 
     %typemap(argout) string & %{
