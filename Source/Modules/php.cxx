@@ -2191,7 +2191,11 @@ public:
 	  Printf(args, ", ");
 	}
 	if (Strcmp(GetChar(p, "type"), SwigType_str(GetChar(p, "type"), 0))) {
-	    Printf(args, "(%s)", SwigType_str(GetChar(p, "type"), 0));
+	  SwigType *t = Getattr(p, "type");
+	  Printf(args, "%s", SwigType_rcaststr(t, 0));
+	  if (SwigType_isreference(t)) {
+	    Append(args, "*");
+	  }
 	}
 	Printf(args, "arg%d", i+1);
       }
