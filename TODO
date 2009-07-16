@@ -376,9 +376,3 @@ Documentation
 
 **     Add section on WAD.
 
-Miklos' items
--------------
-
-Performance:
-- Try to avoid the get_class() call in PHP and use a Zend API equivalent
-  of it from the C++ code if possible.
