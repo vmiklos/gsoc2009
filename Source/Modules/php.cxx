@@ -1004,7 +1004,7 @@ public:
     /* Error handling code */
     Printf(f->code, "fail:\n");
     Printv(f->code, cleanup, NIL);
-    Printv(f->code, "zend_error(SWIG_ErrorCode(),\"%s\",SWIG_ErrorMsg());", NIL);
+    Printv(f->code, "zend_error_noreturn(SWIG_ErrorCode(),\"%s\",SWIG_ErrorMsg());", NIL);
 
     Printf(f->code, "}\n");
 
@@ -2283,7 +2283,7 @@ public:
 
     Append(f->code, "return;\n");
     Append(f->code, "fail:\n");
-    Append(f->code, "zend_error(SWIG_ErrorCode(),\"%s\",SWIG_ErrorMsg());\n");
+    Append(f->code, "zend_error_noreturn(SWIG_ErrorCode(),\"%s\",SWIG_ErrorMsg());\n");
     Printf(f->code, "}\n");
 
     Wrapper_print(f, s_wrappers);
@@ -2662,7 +2662,7 @@ public:
     }
 
     Append(w->code, "fail:\n");
-    Append(w->code, "zend_error(SWIG_ErrorCode(),\"%s\",SWIG_ErrorMsg());\n");
+    Append(w->code, "zend_error_noreturn(SWIG_ErrorCode(),\"%s\",SWIG_ErrorMsg());\n");
     Append(w->code, "}\n");
 
     // We expose protected methods via an extra public inline method which makes a straight call to the wrapped class' method
