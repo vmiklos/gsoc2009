@@ -2483,8 +2483,7 @@ public:
 	    SwigType_namestr(name));
       }
     } else {
-      /* attach typemaps to arguments (C/C++ -> Python) */
-      String *arglist = NewString("");
+      /* attach typemaps to arguments (C/C++ -> PHP) */
       String *parse_args = NewString("");
 
       /* remove the wrapper 'w' since it was producing spurious temps */
@@ -2523,7 +2522,6 @@ public:
 	String *pname = Getattr(p, "name");
 	String *ptype = Getattr(p, "type");
 
-	Putc(',', arglist);
 	if ((tm = Getattr(p, "tmap:directorin")) != 0) {
 	  String *parse = Getattr(p, "tmap:directorin:parse");
 	  if (!parse) {
@@ -2536,7 +2534,6 @@ public:
 	    Printf(wrap_args, "args[%d] = &%s;\n", idx - 1, source);
 
 	    Printv(wrap_args, tm, "\n", NIL);
-	    Printv(arglist, "(PyObject *)", source, NIL);
 	    Putc('O', parse_args);
 	  } else {
 	    use_parse = 1;
@@ -2545,77 +2542,15 @@ public:
 	    Replaceall(tm, "$owner", "0");
 	    if (Len(tm) == 0)
 	      Append(tm, pname);
-	    Append(arglist, tm);
 	  }
 	  p = Getattr(p, "tmap:directorin:next");
 	  continue;
 	} else if (Cmp(ptype, "void")) {
-	  /* special handling for pointers to other C++ director classes.
-	   * ideally this would be left to a typemap, but there is currently no
-	   * way to selectively apply the dynamic_cast<> to classes that have
-	   * directors.  in other words, the type "SwigDirector_$1_lname" only exists
-	   * for classes with directors.  we avoid the problem here by checking
-	   * module.wrap::directormap, but it's not clear how to get a typemap to
-	   * do something similar.  perhaps a new default typemap (in addition
-	   * to SWIGTYPE) called DIRECTORTYPE?
-	   */
-	  if (SwigType_ispointer(ptype) || SwigType_isreference(ptype)) {
-	    Node *module = Getattr(parent, "module");
-	    Node *target = Swig_directormap(module, ptype);
-	    sprintf(source, "arg%d", idx++);
-	    String *nonconst = 0;
-	    /* strip pointer/reference --- should move to Swig/stype.c */
-	    String *nptype = NewString(Char(ptype) + 2);
-	    /* name as pointer */
-	    String *ppname = Copy(pname);
-	    if (SwigType_isreference(ptype)) {
-	      Insert(ppname, 0, "&");
-	    }
-	    /* if necessary, cast away const since Python doesn't support it! */
-	    if (SwigType_isconst(nptype)) {
-	      nonconst = NewStringf("nc_tmp_%s", pname);
-	      String *nonconst_i = NewStringf("= const_cast<%s>(%s)", SwigType_lstr(ptype, 0), ppname);
-	      Wrapper_add_localv(w, nonconst, SwigType_lstr(ptype, 0), nonconst, nonconst_i, NIL);
-	      Delete(nonconst_i);
-	      Swig_warning(WARN_LANG_DISCARD_CONST, input_file, line_number,
-		  "Target language argument '%s' discards const in director method %s::%s.\n",
-		  SwigType_str(ptype, pname), SwigType_namestr(c_classname), SwigType_namestr(name));
-	    } else {
-	      nonconst = Copy(ppname);
-	    }
-	    Delete(nptype);
-	    Delete(ppname);
-	    String *mangle = SwigType_manglestr(ptype);
-	    if (target) {
-	      String *director = NewStringf("director_%s", mangle);
-	      Wrapper_add_localv(w, director, "Swig::Director *", director, "= 0", NIL);
-	      Wrapper_add_localv(w, source, "swig::SwigVar_PyObject", source, "= 0", NIL);
-	      Printf(wrap_args, "%s = SWIG_DIRECTOR_CAST(%s);\n", director, nonconst);
-	      Printf(wrap_args, "if (!%s) {\n", director);
-	      Printf(wrap_args, "%s = SWIG_NewPointerObj(%s, SWIGTYPE%s, 0);\n", source, nonconst, mangle);
-	      Append(wrap_args, "} else {\n");
-	      Printf(wrap_args, "%s = %s->swig_get_self();\n", source, director);
-	      Printf(wrap_args, "Py_INCREF((PyObject *)%s);\n", source);
-	      Append(wrap_args, "}\n");
-	      Delete(director);
-	      Printv(arglist, source, NIL);
-	    } else {
-	      Wrapper_add_localv(w, source, "swig::SwigVar_PyObject", source, "= 0", NIL);
-	      Printf(wrap_args, "%s = SWIG_NewPointerObj(%s, SWIGTYPE%s, 0);\n", source, nonconst, mangle);
-	      //Printf(wrap_args, "%s = SWIG_NewPointerObj(%s, SWIGTYPE_p_%s, 0);\n", 
-	      //       source, nonconst, base);
-	      Printv(arglist, source, NIL);
-	    }
-	    Putc('O', parse_args);
-	    Delete(mangle);
-	    Delete(nonconst);
-	  } else {
-	    Swig_warning(WARN_TYPEMAP_DIRECTORIN_UNDEF, input_file, line_number,
-		"Unable to use type %s as a function argument in director method %s::%s (skipping method).\n", SwigType_str(ptype, 0),
-		SwigType_namestr(c_classname), SwigType_namestr(name));
-	    status = SWIG_NOWRAP;
-	    break;
-	  }
+	  Swig_warning(WARN_TYPEMAP_DIRECTORIN_UNDEF, input_file, line_number,
+	      "Unable to use type %s as a function argument in director method %s::%s (skipping method).\n", SwigType_str(ptype, 0),
+	      SwigType_namestr(c_classname), SwigType_namestr(name));
+	  status = SWIG_NOWRAP;
+	  break;
 	}
 	p = nextSibling(p);
       }
@@ -2632,22 +2567,11 @@ public:
       Append(w->code, "  SWIG_PHP_Error(E_ERROR, \"this pointer is NULL\");");
       Append(w->code, "}\n\n");
 
-      /* add the method name as a PyString */
-      String *pyname = Getattr(n, "sym:name");
-
-      /* vmiklos int allow_thread = threads_enable(n);
-
-      if (allow_thread) {
-	thread_begin_block(n, w->code);
-	Append(w->code, "{\n");
-      }*/
-
-      /* wrap complex arguments to PyObjects */
+      /* wrap complex arguments to zvals */
       Printv(w->code, wrap_args, NIL);
 
       Append(w->code, "call_user_function(EG(function_table), (zval**)&swig_self, &funcname,\n");
       Printf(w->code, "  result, %d, args TSRMLS_CC);\n", idx);
-      /* vmiklos Append(w->code, "#endif\n"); */
 
       /* exception handling */
       tm = Swig_typemap_lookup("director:except", n, "result", 0);
@@ -2656,33 +2580,16 @@ public:
 	if (tm)
 	  tm = Copy(tm);
       }
-      /* vmiklos Append(w->code, "if (result == NULL) {\n");
-      Append(w->code, "  PyObject *error = PyErr_Occurred();\n"); */
       if ((tm) && Len(tm) && (Strcmp(tm, "1") != 0)) {
 	Replaceall(tm, "$error", "error");
 	Printv(w->code, Str(tm), "\n", NIL);
       }
-      /* vmiklos Append(w->code, "}\n"); */
       Delete(tm);
 
-      /*
-       * Python method may return a simple object, or a tuple.
-       * for in/out aruments, we have to extract the appropriate PyObjects from the tuple,
-       * then marshal everything back to C/C++ (return value and output arguments).
-       *
-       */
-
-      /* marshal return value and other outputs (if any) from PyObject to C/C++ type */
+      /* marshal return value from PHP to C/C++ type */
 
       String *cleanup = NewString("");
       String *outarg = NewString("");
-
-      if (outputs > 1) {
-	Wrapper_add_local(w, "output", "PyObject *output");
-	Append(w->code, "if (!PyTuple_Check(result)) {\n");
-	Printf(w->code, "  Swig::DirectorTypeMismatchException::raise(\"Python method %s.%sfailed to return a tuple.\");\n", classname, pyname);
-	Append(w->code, "}\n");
-      }
 
       idx = 0;
 
@@ -2699,12 +2606,7 @@ public:
 	tm = Swig_typemap_lookup("directorout", n, "result", w);
 	Setattr(n, "type", type);
 	if (tm != 0) {
-	  if (outputs > 1) {
-	    Printf(w->code, "output = PyTuple_GetItem(result, %d);\n", idx++);
-	    Replaceall(tm, "$input", "output");
-	  } else {
-	    Replaceall(tm, "$input", "&result");
-	  }
+	  Replaceall(tm, "$input", "&result");
 	  char temp[24];
 	  sprintf(temp, "%d", idx);
 	  Replaceall(tm, "$argnum", temp);
@@ -2715,9 +2617,6 @@ public:
 	  } else {
 	    Replaceall(tm, "$disown", "0");
 	  }
-	  /* vmiklos if (Getattr(n, "tmap:directorout:implicitconv")) {
-	    Replaceall(tm, "$implicitconv", get_implicitconv_flag(n));
-	  } */
 	  Replaceall(tm, "$result", "c_result");
 	  Printv(w->code, tm, "\n", NIL);
 	  Delete(tm);
@@ -2732,12 +2631,7 @@ public:
       /* marshal outputs */
       for (p = l; p;) {
 	if ((tm = Getattr(p, "tmap:directorargout")) != 0) {
-	  if (outputs > 1) {
-	    Printf(w->code, "output = PyTuple_GetItem(result, %d);\n", idx++);
-	    Replaceall(tm, "$input", "output");
-	  } else {
-	    Replaceall(tm, "$input", "result");
-	  }
+	  Replaceall(tm, "$input", "result");
 	  Replaceall(tm, "$result", Getattr(p, "name"));
 	  Printv(w->code, tm, "\n", NIL);
 	  p = Getattr(p, "tmap:directorargout:next");
@@ -2746,16 +2640,9 @@ public:
 	}
       }
 
-      /* any existing helper functions to handle this? */
-      /* vmiklos if (allow_thread) {
-	Append(w->code, "}\n");
-	thread_end_block(n, w->code);
-      }*/
-
       Append(w->code, "FREE_ZVAL(result);\n");
 
       Delete(parse_args);
-      Delete(arglist);
       Delete(cleanup);
       Delete(outarg);
     }
