@@ -1496,8 +1496,13 @@ public:
 	    while (last_handled_i < i) {
 	      Printf(prepare, "case %d: ", ++last_handled_i);
 	    }
-	    if (Cmp(d, "void") != 0)
-	      Printf(prepare, "$this->%s=", SWIG_PTR);
+	    if (Cmp(d, "void") != 0) {
+		if ((!directorsEnabled() || !Swig_directorclass(n)) && !newobject) {
+		Append(prepare, "$r=");
+	      } else {
+		Printf(prepare, "$this->%s=", SWIG_PTR);
+	      }
+	    }
 	    if (!directorsEnabled() || !Swig_directorclass(n) || !newobject) {
 	      Printf(prepare, "%s(%s); break;\n", iname, invoke_args);
 	    } else if (!i) {
@@ -1513,8 +1518,13 @@ public:
 	Printf(prepare, "\t\t");
 	if (had_a_case)
 	  Printf(prepare, "default: ");
-	if (Cmp(d, "void") != 0)
-	  Printf(prepare, "$this->%s=", SWIG_PTR);
+	if (Cmp(d, "void") != 0) {
+	  if ((!directorsEnabled() || !Swig_directorclass(n)) && !newobject) {
+	    Append(prepare, "$r=");
+	  } else {
+	    Printf(prepare, "$this->%s=", SWIG_PTR);
+	  }
+	}
 	if (!directorsEnabled() || !Swig_directorclass(n) || !newobject) {
 	  Printf(prepare, "%s(%s);\n", iname, invoke_args);
 	} else {
