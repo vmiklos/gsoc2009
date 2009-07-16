@@ -1215,7 +1215,7 @@ likely to be extended in PHP and used in C++.
 Compared to classes that do not use directors, the call routing in the
 director methods does add some overhead. In particular, at least one
 dynamic cast and one extra function call occurs per method call from
-Php. Relative to the speed of PHP execution this is probably completely
+PHP. Relative to the speed of PHP execution this is probably completely
 negligible. For worst case routing, a method call that ultimately
 resolves in C++ may take one extra detour through PHP in order to ensure
 that the method does not have an extended PHP implementation. This could
