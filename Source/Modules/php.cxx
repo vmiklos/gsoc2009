@@ -276,7 +276,7 @@ public:
       }
     }
 
-    /* Set comparison with none for ConstructorToFunction */
+    /* Set comparison with null for ConstructorToFunction */
     setSubclassInstanceCheck(NewString("$arg->type != IS_NULL"));
 
     /* Initialize all of the output files */
@@ -289,7 +289,7 @@ public:
       FileErrorDisplay(outfile);
       SWIG_exit(EXIT_FAILURE);
     }
-    f_runtime = NewString("");
+    f_runtime = NewStringEmpty();
 
     /* sections of the output file */
     s_init = NewString("/* init section */\n");
@@ -306,8 +306,8 @@ public:
     s_oinit = NewString("/* oinit subsection */\n");
     pragma_phpinfo = NewStringEmpty();
     s_phpclasses = NewString("/* PHP Proxy Classes */\n");
-    f_directors_h = NewString("");
-    f_directors = NewString("");
+    f_directors_h = NewStringEmpty();
+    f_directors = NewStringEmpty();
 
     if (directorsEnabled()) {
       f_runtime_h = NewFile(outfile_h, "w", SWIG_output_files());
@@ -348,8 +348,8 @@ public:
     if (directorsEnabled()) {
       Swig_banner(f_directors_h);
       Printf(f_directors_h, "\n");
-      Printf(f_directors_h, "#ifndef SWIG_%s_WRAP_H_\n", module);
-      Printf(f_directors_h, "#define SWIG_%s_WRAP_H_\n\n", module);
+      Printf(f_directors_h, "#ifndef SWIG_%s_WRAP_H_\n", cap_module);
+      Printf(f_directors_h, "#define SWIG_%s_WRAP_H_\n\n", cap_module);
 
       Printf(f_directors, "\n#include \"%s\"\n\n", Swig_file_filename(outfile_h));
     }
@@ -436,8 +436,6 @@ public:
     Append(s_header, "  value->newobject = zval_is_true(*args[1]);\n");
     Append(s_header, "\n");
     Append(s_header, "  return;\n");
-    Append(s_header, "fail:\n");
-    Append(s_header, "  zend_error(SWIG_ErrorCode(),\"%s\",SWIG_ErrorMsg());\n");
     Append(s_header, "}\n");
     Printf(s_header, "ZEND_NAMED_FUNCTION(_wrap_swig_%s_get_newobject) {\n", module);
     Append(s_header, "  zval **args[1];\n");
@@ -453,8 +451,6 @@ public:
     Append(s_header, "  RETVAL_LONG(value->newobject);\n");
     Append(s_header, "\n");
     Append(s_header, "  return;\n");
-    Append(s_header, "fail:\n");
-    Append(s_header, "  zend_error(SWIG_ErrorCode(),\"%s\",SWIG_ErrorMsg());\n");
     Append(s_header, "}\n");
 
     Printf(s_header, "#define SWIG_name  \"%s\"\n", module);
@@ -817,7 +813,7 @@ public:
       num_arguments++;
 
     if (num_arguments > 0) {
-      String *args = NewString("");
+      String *args = NewStringEmpty();
       if (wrapperType == directorconstructor)
 	Printv(args, "zval *arg0;\n", NIL);
       Printf(args, "zval **args[%d]", num_arguments);
@@ -2192,7 +2188,7 @@ public:
       String *name = GetChar(Swig_methodclass(n), "name");
       String *ctype = GetChar(Swig_methodclass(n), "classtype");
       String *sname = GetChar(Swig_methodclass(n), "sym:name");
-      String *args = NewString("");
+      String *args = NewStringEmpty();
       ParmList *p = Getattr(n, "parms");
       int i;
 
@@ -2212,8 +2208,8 @@ public:
 
       /* director ctor code is specific for each class */
       Delete(director_ctor_code);
-      director_ctor_code = NewString("");
-      director_prot_ctor_code = NewString("");
+      director_ctor_code = NewStringEmpty();
+      director_prot_ctor_code = NewStringEmpty();
       Printf(director_ctor_code, "if ( arg0->type == IS_NULL ) { /* not subclassed */\n");
       Printf(director_prot_ctor_code, "if ( arg0->type == IS_NULL ) { /* not subclassed */\n");
       Printf(director_ctor_code, "  result = (%s *)new %s(%s);\n", ctype, name, args);
@@ -2319,7 +2315,7 @@ public:
     Node *parent = Getattr(n, "parentNode");
     String *decl = Getattr(n, "decl");
     String *supername = Swig_class_name(parent);
-    String *classname = NewString("");
+    String *classname = NewStringEmpty();
     Printf(classname, "SwigDirector_%s", supername);
 
     /* insert self parameter */
@@ -2374,7 +2370,7 @@ public:
     ParmList *l;
     Wrapper *w;
     String *tm;
-    String *wrap_args = NewString("");
+    String *wrap_args = NewStringEmpty();
     String *return_type;
     String *value = Getattr(n, "value");
     String *storage = Getattr(n, "storage");
@@ -2394,7 +2390,7 @@ public:
     name = Getattr(n, "name");
 
     w = NewWrapper();
-    declaration = NewString("");
+    declaration = NewStringEmpty();
 
     /* determine if the method returns a pointer */
     decl = Getattr(n, "decl");
@@ -2484,7 +2480,7 @@ public:
       }
     } else {
       /* attach typemaps to arguments (C/C++ -> PHP) */
-      String *parse_args = NewString("");
+      String *parse_args = NewStringEmpty();
 
       /* remove the wrapper 'w' since it was producing spurious temps */
       Swig_typemap_attach_parms("in", l, 0);
@@ -2588,8 +2584,8 @@ public:
 
       /* marshal return value from PHP to C/C++ type */
 
-      String *cleanup = NewString("");
-      String *outarg = NewString("");
+      String *cleanup = NewStringEmpty();
+      String *outarg = NewStringEmpty();
 
       idx = 0;
 
@@ -2666,7 +2662,7 @@ public:
     Append(w->code, "}\n");
 
     // We expose protected methods via an extra public inline method which makes a straight call to the wrapped class' method
-    String *inline_extra_method = NewString("");
+    String *inline_extra_method = NewStringEmpty();
     if (dirprot_mode() && !is_public(n) && !pure_virtual) {
       Printv(inline_extra_method, declaration, NIL);
       String *extra_method_name = NewStringf("%sSwigPublic", name);
