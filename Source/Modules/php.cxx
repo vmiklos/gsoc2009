@@ -673,6 +673,10 @@ public:
 
     int maxargs;
     String *tmp = NewStringEmpty();
+    if (Swig_directorclass(n) && wrapperType == directorconstructor) {
+      /* We have an extra 'this' parameter. */
+      Setattr(n, "wrap:this", "1");
+    }
     String *dispatch = Swig_overload_dispatch(n, "return %s(INTERNAL_FUNCTION_PARAM_PASSTHRU);", &maxargs);
 
     /* Generate a dispatch wrapper for all overloaded functions */
@@ -686,25 +690,6 @@ public:
 
     Wrapper_add_local(f, "argc", "int argc");
 
-    if (Swig_directorclass(n) && wrapperType == directorconstructor) {
-      /*
-       * We have an extra 'this' parameter.
-       * TODO: isn't there a better way to handle this?
-       */
-      maxargs++;
-      for (int i = maxargs; i; i--) {
-	String *fro = NewStringf(" %d", i-1);
-	String *to = NewStringf(" %d", i);
-	Replaceall(dispatch, fro, to);
-	Delete(fro);
-	Delete(to);
-	fro = NewStringf("[%d]", i-1);
-	to = NewStringf("[%d]", i);
-	Replaceall(dispatch, fro, to);
-	Delete(fro);
-	Delete(to);
-      }
-    }
     Printf(tmp, "zval **argv[%d]", maxargs);
     Wrapper_add_local(f, "argv", tmp);
 
