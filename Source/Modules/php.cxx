@@ -800,7 +800,7 @@ public:
     if (num_arguments > 0) {
       String *args = NewStringEmpty();
       if (wrapperType == directorconstructor)
-	Printv(args, "zval *arg0;\n", NIL);
+        Wrapper_add_local(f, "arg0", "zval *arg0");
       Printf(args, "zval **args[%d]", num_arguments);
       Wrapper_add_local(f, "args", args);
       Delete(args);
