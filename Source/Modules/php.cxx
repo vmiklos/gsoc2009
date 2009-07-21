@@ -675,7 +675,7 @@ public:
     String *tmp = NewStringEmpty();
     if (Swig_directorclass(n) && wrapperType == directorconstructor) {
       /* We have an extra 'this' parameter. */
-      Setattr(n, "wrap:this", "1");
+      SetFlag(n, "wrap:this");
     }
     String *dispatch = Swig_overload_dispatch(n, "return %s(INTERNAL_FUNCTION_PARAM_PASSTHRU);", &maxargs);
 

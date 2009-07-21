@@ -718,7 +718,7 @@ String *Swig_overload_dispatch(Node *n, const_String_or_char_ptr fmt, int *maxar
     Parm *pi = Getattr(ni, "wrap:parms");
     int num_required = emit_num_required(pi);
     int num_arguments = emit_num_arguments(pi);
-    if (checkAttribute(n, "wrap:this", "1")) {
+    if (GetFlag(n, "wrap:this")) {
       num_required++;
       num_arguments++;
     }
@@ -755,7 +755,7 @@ String *Swig_overload_dispatch(Node *n, const_String_or_char_ptr fmt, int *maxar
 	Printf(f, "}\n");
 	Delete(lfmt);
       }
-      if (print_typecheck(f, (checkAttribute(n, "wrap:this", "1") ? j + 1 : j), pj)) {
+      if (print_typecheck(f, (GetFlag(n, "wrap:this") ? j + 1 : j), pj)) {
 	Printf(f, "if (_v) {\n");
 	num_braces++;
       }
