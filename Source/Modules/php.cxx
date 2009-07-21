@@ -738,7 +738,7 @@ public:
     ParmList *l = Getattr(n, "parms");
     String *nodeType = Getattr(n, "nodeType");
     int newobject = GetFlag(n, "feature:new");
-    int constructor = (!Cmp(nodeType, "constructor"));
+    int constructor = (Cmp(nodeType, "constructor") == 0);
 
     Parm *p;
     int i;
@@ -1533,7 +1533,7 @@ public:
 	  SwigType *t = Getattr(current_class, "classtype");
 	  String *mangled_type = SwigType_manglestr(SwigType_ltype(t));
 	  Printf(output, "\t%s function %s(%s) {\n", acc, methodname, args);
-	  Printf(output, "\t\tif (is_resource($%s) && get_resource_type($%s) == '_p%s') {\n", arg0, arg0, mangled_type);
+	  Printf(output, "\t\tif (is_resource($%s) && get_resource_type($%s) === '_p%s') {\n", arg0, arg0, mangled_type);
 	  Printf(output, "\t\t\t$this->%s=$%s;\n", SWIG_PTR, arg0);
 	  Printf(output, "\t\t\treturn;\n");
 	  Printf(output, "\t\t}\n");
@@ -1552,7 +1552,7 @@ public:
 	} else {
 	  Node *parent = Swig_methodclass(n);
 	  String *classname = Swig_class_name(parent);
-	  Printf(output, "\t\tif (get_class($this) === \"%s\") {\n", classname);
+	  Printf(output, "\t\tif (get_class($this) === '%s') {\n", classname);
 	  Printf(output, "\t\t\t$_this = null;\n");
 	  Printf(output, "\t\t} else {\n");
 	  Printf(output, "\t\t\t$_this = $this;\n");
@@ -1592,7 +1592,7 @@ public:
 	     * _p_Foo -> Foo, _p_ns__Bar -> Bar
 	     * TODO: do this in a more elegant way
 	     */
-	    Printf(output, "\t\tif (is_resource($r)) $class='%s'.substr(get_resource_type($r), (strpos(get_resource_type($r), \"__\") ? strpos(get_resource_type($r), \"__\") + 2 : 3));\n", prefix);
+	    Printf(output, "\t\tif (is_resource($r)) $class='%s'.substr(get_resource_type($r), (strpos(get_resource_type($r), '__') ? strpos(get_resource_type($r), '__') + 2 : 3));\n", prefix);
 	    Printf(output, "\t\treturn is_resource($r) ? new $class($r) : $r;\n");
 	  } else {
 	    Printf(output, "\t\t$this->%s = $r;\n", SWIG_PTR);
@@ -1892,7 +1892,7 @@ public:
       }
 
       Printf(s_phpclasses, "class %s%s ", prefix, shadow_classname);
-      String *baseclass;
+      String *baseclass = NULL;
       if (base.item) {
 	baseclass = Getattr(base.item, "sym:name");
 	if (!baseclass)
@@ -1915,16 +1915,16 @@ public:
 	  // Not many setters, so avoid call_user_func.
 	  while (ki.key) {
 	    key = ki.key;
-	    Printf(s_phpclasses, "\t\tif ($var == '%s') return %s($this->%s,$value);\n", key, ki.item, SWIG_PTR);
+	    Printf(s_phpclasses, "\t\tif ($var === '%s') return %s($this->%s,$value);\n", key, ki.item, SWIG_PTR);
 	    ki = Next(ki);
 	  }
 	} else {
 	  Printf(s_phpclasses, "\t\t$func = '%s_'.$var.'_set';\n", shadow_classname);
 	  Printf(s_phpclasses, "\t\tif (function_exists($func)) return call_user_func($func,$this->%s,$value);\n", SWIG_PTR);
 	}
-	Printf(s_phpclasses, "\t\tif ($var == 'thisown') return swig_%s_alter_newobject($this->%s,$value);\n", module, SWIG_PTR);
+	Printf(s_phpclasses, "\t\tif ($var === 'thisown') return swig_%s_alter_newobject($this->%s,$value);\n", module, SWIG_PTR);
 	Printf(s_phpclasses, "\t\telse $this->%s[$var] = $value;\n", SWIG_DATA);
-	if (base.item) {
+	if (baseclass) {
 	  Printf(s_phpclasses, "\t\treturn %s%s::__set($var,$value);\n", prefix, baseclass);
 	}
 	Printf(s_phpclasses, "\t}\n");
@@ -1932,16 +1932,16 @@ public:
 	/* Create __isset for PHP 5.1 and later; PHP 5.0 will just ignore it. */
 	Printf(s_phpclasses, "\n\tfunction __isset($var) {\n");
 	Printf(s_phpclasses, "\t\tif (function_exists('%s_'.$var.'_set')) return true;\n", shadow_classname);
-	Printf(s_phpclasses, "\t\tif ($var == 'thisown') return true;\n");
+	Printf(s_phpclasses, "\t\tif ($var === 'thisown') return true;\n");
 	Printf(s_phpclasses, "\t\telse return array_key_exists($var, $this->%s);\n", SWIG_DATA);
 	Printf(s_phpclasses, "\t}\n");
       } else {
 	Printf(s_phpclasses, "\n\tfunction __set($var,$value) {\n");
-	Printf(s_phpclasses, "\t\tif ($var == 'thisown') return swig_%s_alter_newobject($this->%s,$value);\n", module, SWIG_PTR);
+	Printf(s_phpclasses, "\t\tif ($var === 'thisown') return swig_%s_alter_newobject($this->%s,$value);\n", module, SWIG_PTR);
 	Printf(s_phpclasses, "\t\telse $this->%s[$var] = $value;\n", SWIG_DATA);
 	Printf(s_phpclasses, "\t}\n");
 	Printf(s_phpclasses, "\n\tfunction __isset($var) {\n");
-	Printf(s_phpclasses, "\t\tif ($var == 'thisown') return true;\n");
+	Printf(s_phpclasses, "\t\tif ($var === 'thisown') return true;\n");
 	Printf(s_phpclasses, "\t\telse return array_key_exists($var, $this->%s);\n", SWIG_DATA);
 	Printf(s_phpclasses, "\t}\n");
       }
@@ -1956,14 +1956,14 @@ public:
 	  // Not many getters, so avoid call_user_func.
 	  while (ki.key) {
 	    key = ki.key;
-	    Printf(s_phpclasses, "\t\tif ($var == '%s') return %s($this->%s);\n", key, ki.item, SWIG_PTR);
+	    Printf(s_phpclasses, "\t\tif ($var === '%s') return %s($this->%s);\n", key, ki.item, SWIG_PTR);
 	    ki = Next(ki);
 	  }
 	} else {
 	  Printf(s_phpclasses, "\t\t$func = '%s_'.$var.'_get';\n", shadow_classname);
 	  Printf(s_phpclasses, "\t\tif (function_exists($func)) return call_user_func($func,$this->%s);\n", SWIG_PTR);
 	}
-	Printf(s_phpclasses, "\t\telse if ($var == 'thisown') return swig_%s_get_newobject($this->%s);\n", module, SWIG_PTR);
+	Printf(s_phpclasses, "\t\telse if ($var === 'thisown') return swig_%s_get_newobject($this->%s);\n", module, SWIG_PTR);
 	Printf(s_phpclasses, "\t\telse if(array_key_exists($var, $this->%s)) return $this->%s[$var];\n", SWIG_DATA, SWIG_DATA);
 	// Reading an unknown property name gives null in PHP.
 	if (base.item) {
@@ -1974,7 +1974,7 @@ public:
 	Printf(s_phpclasses, "\t}\n");
       } else {
 	Printf(s_phpclasses, "\n\tfunction __get($var) {\n");
-	Printf(s_phpclasses, "\t\tif ($var == 'thisown') return swig_example_get_newobject($this->%s);\n", SWIG_PTR);
+	Printf(s_phpclasses, "\t\tif ($var === 'thisown') return swig_example_get_newobject($this->%s);\n", SWIG_PTR);
 	Printf(s_phpclasses, "\t\telse return $this->%s[$var];\n", SWIG_DATA);
 	Printf(s_phpclasses, "\t}\n");
       }
@@ -2380,14 +2380,13 @@ public:
     /* determine if the method returns a pointer */
     decl = Getattr(n, "decl");
     is_pointer = SwigType_ispointer_return(decl);
-    is_void = (!Cmp(type, "void") && !is_pointer);
+    is_void = (Cmp(type, "void") == 0 && !is_pointer);
 
     /* form complete return type */
     return_type = Copy(type);
     {
       SwigType *t = Copy(decl);
-      SwigType *f = 0;
-      f = SwigType_pop_function(t);
+      SwigType *f = SwigType_pop_function(t);
       SwigType_push(return_type, t);
       Delete(f);
       Delete(t);
@@ -2488,14 +2487,6 @@ public:
 	  p = Getattr(p, "tmap:in:next");
 	  continue;
 	}
-
-	/* old style?  caused segfaults without the p!=0 check
-	   in the for() condition, and seems dangerous in the
-	   while loop as well.
-	   while (Getattr(p, "tmap:ignore")) {
-	   p = Getattr(p, "tmap:ignore:next");
-	   }
-	   */
 
 	if (Getattr(p, "tmap:directorargout") != 0)
 	  outputs++;

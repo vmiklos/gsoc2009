@@ -192,7 +192,6 @@
               unsigned long,
               signed char,
               unsigned char,
-              bool,
               size_t,
               enum SWIGTYPE
 {
@@ -204,10 +203,21 @@
 	ZVAL_BOOL(return_value,($1)?1:0);
 }
 
+%typemap(directorin) bool
+{
+	ZVAL_BOOL($input,($1_name)?1:0);
+}
+
 %typemap(out) float,
               double
 {
 	ZVAL_DOUBLE(return_value,$1);
+}
+
+%typemap(directorin) float,
+              double
+{
+	ZVAL_DOUBLE($input,$1_name);
 }
 
 %typemap(out) char
