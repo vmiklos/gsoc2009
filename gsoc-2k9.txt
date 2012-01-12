@@ -1,0 +1,223 @@
+= Director support for PHP
+Miklos Vajna <vmiklos@frugalware.org>
+
+// Because docbook calls it 'c++', while HTML uses 'cpp'
+:cpp: {basebackend@docbook:c++:cpp}
+
+== Abstract
+
+SWIG's directors allow "callback" functionality to be wrapped.
+Essentially this enables a user to inherit a target language class from
+a $$C++$$ class enabling cross language polymorphism. SWIG currently only
+supports directors for Python, Ruby, Java, C#, and Ocaml. In particular,
+PHP support is lacking, but it's certainly possible to implement - and
+this summer I would like to work on this.
+  
+== Content
+
+=== Detailed Description
+
+==== Full description
+
+SWIG is normally can be used for wrapping a C/$$C++$$ library to be
+accessible from other languages like Python, PHP, etc. In case the given
+function requires a callback, normally the callback has to be written in
+C/$$C++$$ as well. The director feature of SWIG allows the user to implement
+callback functions in the target language. The used technique is to
+inherit the $$C++$$ class of callback function in the target language and
+implement the callbacks there.  The director feature is implemented for
+a number of languages, but PHP support is not yet done.  This summer I
+would like to implement it.
+
+==== Benefits
+
+When the project is completed, users who use SWIG to access C/$$C++$$
+libraries from PHP will have the ability to implement callback functions
+in PHP by being able to inherit $$C++$$ classes in PHP.
+
+==== Motivation
+
+I got the idea of working on this because I already used the director
+feature of SWIG in the libwpd project for Java, and recently the libwpd
+maintainer added C# support to CVS as well - based on my work. It would
+be nice to have PHP support as well, but currently SWIG does not allow
+me to do so.
+
+==== Implementation design
+
+Regarding implementation, I want to take the Python director support as
+an example and implement this feature in a similar way for PHP. I don't
+know exact filenames, because I don't know (yet) the PHP nor the SWIG
+internal API, but I expect the areas touched by the Python
+implementation will basically match the ones I want to touch because of
+PHP.
+
+==== Use cases
+
+The typical usage of the director feature is the following: A $$C++$$ parser
+library provides a class of virtual functions, like:
+
+// Normally cpp would be enough, but using {cpp} is necessary because
+// it's an attribute, defined above.
+[source,{cpp}]
+----
+class FooParser {
+public:
+	virtual void startDocument() = 0;
+	virtual void endDocument() = 0;
+};
+----
+
+Then normally this class is inherited in $$C++$$, the functions are
+implemented, and an instance of the inherited class is passed back to
+the parser as a pointer. The trick is to be able to inherit the class in
+PHP and implement these callback functions in PHP, instead of $$C++$$.
+
+A sample about how callbacks should be implemented in PHP could be the
+curl PHP bindings
+(http://curl.haxx.se/libcurl/php/examples/callbacks.html,
+http://cvs.php.net/viewvc.cgi/php-src/ext/curl/).
+
+Of course I don't want to reinvent the wheel, so I want to first see how
+the Python director test-cases work, and then I can write a PHP version
+of them to test my code.
+
+=== Implementation timeline
+
+==== Milestones
+
+* Set up the development environment, test commiting to my branch in
+  SWIG SVN,   build SWIG from SVN, write the interface file for a
+  trivial PHP   binding without director support for a $$C++$$ library.
+  (Till 2008.05.30.)
+
+* Understand how the Python director works. (Till 2009.06.06.)
+
+* Understand how the current PHP backend of SWIG works - this probably
+  includes reading some PHP internal API documentation as well. (Till
+  2009.06.13.)
+
+* Write tests and examples for the PHP director support. There are 18
+  testcases under Examples/test-suite/python/director_*.py - I think
+  porting that to PHP would be a good start. There are also 4 python
+  examples -callback, extend, swigrun and weave - writing the PHP
+  equivalent of them would be good as well. At least extend and callback
+  are implemented by all the already existing director languages, so
+  having them in PHP is something I want to work on. (Till 2009.06.16.)
+
+* Write the actual PHP director code. In detail this means that I want
+  to add support for the directorfree, directorin, directorargout,
+  director:except and directorout typemaps. These typemaps are
+  referenced in Source/Modules/python.cxx, so I will have to touch
+  Source/Modules/php.cxx. OTOH, the definition of the proxy classes is
+  in Lib/python/director.swg, so I'll have to place the PHP equivalent
+  of that in Lib/php/director.swg. (Till 2009.07.04.)
+
+* Write documentation for the new feature. (Till 2009.07.11.)
+
+* Fix bugs, fine-tune, update the code based on suggestions from other
+  SWIG developers, etc. (Till 2009.08.10.)
+
+So I would like the first version of the PHP director code ready by the
+time of mid-term evaluation, then I can work out the minor problems,
+write documentation and if time permits - implement related other minor
+features in the second half of the summer. I used concrete dates so that
+I can be checked easily if I'm on track, but of course I may finish with
+a given part a bit earlier or I may have a little delay.
+
+==== Exams, holidays, etc.
+
+I'm a student in Hungary, and here the exam period is between
+2009.05.18. and 2009.06.26. Sadly this has a big overlap with the Summer
+of Code, which starts on 2009.05.26. I'm aware of this and last year I
+managed to get over this as well. I plan to work on my project 40 hours
+a week, which permits to spend entire days on my project, then work
+nothing a few days before the exam.  I don't know the exact date, but
+probably after the mid-term evaluation I'll have a week of holiday. I
+think once I returned I can work more productive on my project with a
+fresh mind, compared to going nowhere during the whole summer.
+
+==== Communication
+
+My experience is that IRC is handy for quick questions, but basically
+the primary protocol is email. If this is OK for my mentor, then I would
+like to use these two for this project as well.
+
+==== Invested time before, during and after SoC
+
+I would like to start with trivial patches or minor bugfixes before the
+SoC starts, so when I start to work on my project, hopefully my name
+will not be unknown on the SWIG developer list. I plan to work 40 hours
+a week during the SoC. (Well, basically. I do not use a timer, the
+average is about something like this.) I don't know the future, I hope I
+can do some contribution after SoC as well.
+
+==== Future work
+
+I don't know anything about it so far, but I'm sure there will be new
+ideas during the implementation of the project. I'm sure I'll at least
+document these ideas once the project is finished, so I or others can
+work on them after the end of SoC.
+
+=== Relevant knowledge
+
+==== Experience of SWIG
+
+I used swig's director feature when I created the Java bindings for
+libwpd and I used SWIG's C#, Java, Perl and Python targets with the
+Pacman package manager (but the later does not use directors). So I'm
+familiar with SWIG as a user, but I did not contribute patches to SWIG
+itself so far.
+
+==== Experience in the project specific area
+
+I expect that I'll need to write C/$$C++$$ and/or PHP code during the
+project. I contributed to various projects written in these languages
+(see below).
+
+==== Used toolchains and platforms
+
+I'm a Linux guy, and I use OS X sometimes, mainly for testing purposes
+as well. I do not really use Windows, unless really needed (then I can
+install it in a virtual machine or something). I'm familiar with `gcc`
+and `make`, I used autotools for other projects previously as well.
+
+==== Recent interaction with the SWIG community
+
+I'm hanging around on #swig-gsoc, and I have talked a bit with William
+Fulton and Olly Betts there.
+
+=== About Me
+
+==== Where do I work/study and my interests
+
+Education: Completing a B.Sc. degree in Computer Science (since 2005) at
+Budapest University of Technology and Economics. I work for SZTAKI
+(http://www.sztaki.hu/?en, part time - 1 day in a week, since 2004). I
+have a page with a few minor projects:  http://vmiklos.hu/projects/
+
+==== Links
+
+A have a page with links to patches I contributed to other FOSS
+projects:  http://vmiklos.hu/portfolio/  Mostly minor code and/or
+documentation fixes. I contributed a few more complex patches to the
+pacman package manager, the bitlbee IM gateway, MPlayer, Git and
+wapreader (these are C and PHP projects).  I'm generally a bash, C/$$C++$$
+and Python guy. I know PHP very well, too. I know some
+perl/Java/erlang/C# as well.  I'm familiar with various version control
+systems, including SVN and Git.
+
+==== IRC name
+
+vmiklos
+
+== Additional resources
+
+- http://vmiklos.hu/gitweb/?p=gsoc2009.git;a=summary[gitweb]
+- link:Miklos_Vajna.tar.gz[patches tarball]
+- link:gsoc-2k9.txt[application source]
+
+== References
+
+- http://google-opensource.blogspot.com/2009/11/swigs-second-summer-of-code.html[SWIG's
+  Second Summer of Code]
