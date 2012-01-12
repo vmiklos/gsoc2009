@@ -2,15 +2,25 @@
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.5.3" />
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.6.5" />
 <title>Director support for PHP</title>
 <style type="text/css">
-/* Debug borders */
-p, li, dt, dd, div, pre, h1, h2, h3, h4, h5, h6 {
-/*
-  border: 1px solid red;
-*/
+/* Shared CSS for AsciiDoc xhtml11 and html5 backends */
+
+/* Default font. */
+body {
+  font-family: Georgia,serif;
+}
+
+/* Title font. */
+h1, h2, h3, h4, h5, h6,
+div.title, caption.title,
+thead, p.table.header,
+#toctitle,
+#author, #revnumber, #revdate, #revremark,
+#footer {
+  font-family: Arial,Helvetica,sans-serif;
 }
 
 body {
@@ -35,13 +45,8 @@ strong {
   color: #083194;
 }
 
-tt {
-  color: navy;
-}
-
 h1, h2, h3, h4, h5, h6 {
   color: #527bbd;
-  font-family: sans-serif;
   margin-top: 1.2em;
   margin-bottom: 0.5em;
   line-height: 1.3;
@@ -59,9 +64,11 @@ h3 {
 h3 + * {
   clear: left;
 }
+h5 {
+  font-size: 1.0em;
+}
 
 div.sectionbody {
-  font-family: serif;
   margin-left: 0;
 }
 
@@ -77,45 +84,44 @@ p {
 ul, ol, li > p {
   margin-top: 0;
 }
+ul > li     { color: #aaa; }
+ul > li > * { color: black; }
 
 pre {
   padding: 0;
   margin: 0;
 }
 
-span#author {
+#author {
   color: #527bbd;
-  font-family: sans-serif;
   font-weight: bold;
   font-size: 1.1em;
 }
-span#email {
+#email {
 }
-span#revnumber, span#revdate, span#revremark {
-  font-family: sans-serif;
+#revnumber, #revdate, #revremark {
 }
 
-div#footer {
-  font-family: sans-serif;
+#footer {
   font-size: small;
   border-top: 2px solid silver;
   padding-top: 0.5em;
   margin-top: 4.0em;
 }
-div#footer-text {
+#footer-text {
   float: left;
   padding-bottom: 0.5em;
 }
-div#footer-badges {
+#footer-badges {
   float: right;
   padding-bottom: 0.5em;
 }
 
-div#preamble {
+#preamble {
   margin-top: 1.5em;
   margin-bottom: 1.5em;
 }
-div.tableblock, div.imageblock, div.exampleblock, div.verseblock,
+div.imageblock, div.exampleblock, div.verseblock,
 div.quoteblock, div.literalblock, div.listingblock, div.sidebarblock,
 div.admonitionblock {
   margin-top: 1.0em;
@@ -135,7 +141,6 @@ div.content { /* Block element content. */
 /* Block element titles. */
 div.title, caption.title {
   color: #527bbd;
-  font-family: sans-serif;
   font-weight: bold;
   text-align: left;
   margin-top: 1.0em;
@@ -157,13 +162,15 @@ div.content + div.title {
 
 div.sidebarblock > div.content {
   background: #ffffee;
-  border: 1px solid silver;
+  border: 1px solid #dddddd;
+  border-left: 4px solid #f0f0f0;
   padding: 0.5em;
 }
 
 div.listingblock > div.content {
-  border: 1px solid silver;
-  background: #f4f4f4;
+  border: 1px solid #dddddd;
+  border-left: 5px solid #f0f0f0;
+  background: #f8f8f8;
   padding: 0.5em;
 }
 
@@ -171,7 +178,7 @@ div.quoteblock, div.verseblock {
   padding-left: 1.0em;
   margin-left: 1.0em;
   margin-right: 10%;
-  border-left: 5px solid #dddddd;
+  border-left: 5px solid #f0f0f0;
   color: #777777;
 }
 
@@ -182,6 +189,7 @@ div.quoteblock > div.attribution {
 
 div.verseblock > pre.content {
   font-family: inherit;
+  font-size: inherit;
 }
 div.verseblock > div.attribution {
   padding-top: 0.75em;
@@ -254,35 +262,12 @@ div.compact div, div.compact div {
   margin-bottom: 0.1em;
 }
 
-div.tableblock > table {
-  border: 3px solid #527bbd;
-}
-thead, p.table.header {
-  font-family: sans-serif;
-  font-weight: bold;
-}
 tfoot {
   font-weight: bold;
 }
 td > div.verse {
   white-space: pre;
 }
-p.table {
-  margin-top: 0;
-}
-/* Because the table frame attribute is overriden by CSS in most browsers. */
-div.tableblock > table[frame="void"] {
-  border-style: none;
-}
-div.tableblock > table[frame="hsides"] {
-  border-left-style: none;
-  border-right-style: none;
-}
-div.tableblock > table[frame="vsides"] {
-  border-top-style: none;
-  border-bottom-style: none;
-}
-
 
 div.hdlist {
   margin-top: 0.8em;
@@ -339,18 +324,25 @@ span.footnote, span.footnoteref {
   min-width: 100px;
 }
 
-
-@media print {
-  div#footer-badges { display: none; }
+div.colist td {
+  padding-right: 0.5em;
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+div.colist td img {
+  margin-top: 0.3em;
 }
 
-div#toc {
+@media print {
+  #footer-badges { display: none; }
+}
+
+#toc {
   margin-bottom: 2.5em;
 }
 
-div#toctitle {
+#toctitle {
   color: #527bbd;
-  font-family: sans-serif;
   font-size: 1.1em;
   font-weight: bold;
   margin-top: 1.0em;
@@ -373,51 +365,158 @@ div.toclevel4 {
   margin-left: 6em;
   font-size: 0.9em;
 }
-/* Workarounds for IE6's broken and incomplete CSS2. */
 
-div.sidebar-content {
-  background: #ffffee;
-  border: 1px solid silver;
-  padding: 0.5em;
+span.aqua { color: aqua; }
+span.black { color: black; }
+span.blue { color: blue; }
+span.fuchsia { color: fuchsia; }
+span.gray { color: gray; }
+span.green { color: green; }
+span.lime { color: lime; }
+span.maroon { color: maroon; }
+span.navy { color: navy; }
+span.olive { color: olive; }
+span.purple { color: purple; }
+span.red { color: red; }
+span.silver { color: silver; }
+span.teal { color: teal; }
+span.white { color: white; }
+span.yellow { color: yellow; }
+
+span.aqua-background { background: aqua; }
+span.black-background { background: black; }
+span.blue-background { background: blue; }
+span.fuchsia-background { background: fuchsia; }
+span.gray-background { background: gray; }
+span.green-background { background: green; }
+span.lime-background { background: lime; }
+span.maroon-background { background: maroon; }
+span.navy-background { background: navy; }
+span.olive-background { background: olive; }
+span.purple-background { background: purple; }
+span.red-background { background: red; }
+span.silver-background { background: silver; }
+span.teal-background { background: teal; }
+span.white-background { background: white; }
+span.yellow-background { background: yellow; }
+
+span.big { font-size: 2em; }
+span.small { font-size: 0.6em; }
+
+span.underline { text-decoration: underline; }
+span.overline { text-decoration: overline; }
+span.line-through { text-decoration: line-through; }
+
+
+/*
+ * xhtml11 specific
+ *
+ * */
+
+tt {
+  font-family: monospace;
+  font-size: inherit;
+  color: navy;
 }
-div.sidebar-title, div.image-title {
-  color: #527bbd;
-  font-family: sans-serif;
+
+div.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.tableblock > table {
+  border: 3px solid #527bbd;
+}
+thead, p.table.header {
   font-weight: bold;
-  margin-top: 0.0em;
-  margin-bottom: 0.5em;
+  color: #527bbd;
+}
+p.table {
+  margin-top: 0;
+}
+/* Because the table frame attribute is overriden by CSS in most browsers. */
+div.tableblock > table[frame="void"] {
+  border-style: none;
+}
+div.tableblock > table[frame="hsides"] {
+  border-left-style: none;
+  border-right-style: none;
+}
+div.tableblock > table[frame="vsides"] {
+  border-top-style: none;
+  border-bottom-style: none;
 }
 
-div.listingblock div.content {
-  border: 1px solid silver;
-  background: #f4f4f4;
-  padding: 0.5em;
+
+/*
+ * html5 specific
+ *
+ * */
+
+.monospaced {
+  font-family: monospace;
+  font-size: inherit;
+  color: navy;
 }
 
-div.quoteblock-attribution {
-  padding-top: 0.5em;
+table.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+thead, p.tableblock.header {
+  font-weight: bold;
+  color: #527bbd;
+}
+p.tableblock {
+  margin-top: 0;
+}
+table.tableblock {
+  border-width: 3px;
+  border-spacing: 0px;
+  border-style: solid;
+  border-color: #527bbd;
+  border-collapse: collapse;
+}
+th.tableblock, td.tableblock {
+  border-width: 1px;
+  padding: 4px;
+  border-style: solid;
+  border-color: #527bbd;
+}
+
+table.tableblock.frame-topbot {
+  border-left-style: hidden;
+  border-right-style: hidden;
+}
+table.tableblock.frame-sides {
+  border-top-style: hidden;
+  border-bottom-style: hidden;
+}
+table.tableblock.frame-none {
+  border-style: hidden;
+}
+
+th.tableblock.halign-left, td.tableblock.halign-left {
+  text-align: left;
+}
+th.tableblock.halign-center, td.tableblock.halign-center {
+  text-align: center;
+}
+th.tableblock.halign-right, td.tableblock.halign-right {
   text-align: right;
 }
 
-pre.verseblock-content {
-  font-family: inherit;
+th.tableblock.valign-top, td.tableblock.valign-top {
+  vertical-align: top;
 }
-div.verseblock-attribution {
-  padding-top: 0.75em;
-  text-align: left;
+th.tableblock.valign-middle, td.tableblock.valign-middle {
+  vertical-align: middle;
 }
-
-div.exampleblock-content {
-  border-left: 3px solid #dddddd;
-  padding-left: 0.5em;
+th.tableblock.valign-bottom, td.tableblock.valign-bottom {
+  vertical-align: bottom;
 }
-
-/* IE6 sets dynamically generated links as visited. */
-div#toc a:visited { color: blue; }
 </style>
 <script type="text/javascript">
 /*<![CDATA[*/
-window.onload = function(){asciidoc.footnotes(); asciidoc.toc(2);}
 var asciidoc = {  // Namespace.
 
 /////////////////////////////////////////////////////////////////////
@@ -479,6 +578,25 @@ toc: function (toclevels) {
   }
 
   var toc = document.getElementById("toc");
+  if (!toc) {
+    return;
+  }
+
+  // Delete existing TOC entries in case we're reloading the TOC.
+  var tocEntriesToRemove = [];
+  var i;
+  for (i = 0; i < toc.childNodes.length; i++) {
+    var entry = toc.childNodes[i];
+    if (entry.nodeName == 'DIV'
+     && entry.getAttribute("class")
+     && entry.getAttribute("class").match(/^toclevel/))
+      tocEntriesToRemove.push(entry);
+  }
+  for (i = 0; i < tocEntriesToRemove.length; i++) {
+    toc.removeChild(tocEntriesToRemove[i]);
+  }
+
+  // Rebuild TOC entries.
   var entries = tocEntries(document.getElementById("content"), toclevels);
   for (var i = 0; i < entries.length; ++i) {
     var entry = entries[i];
@@ -506,24 +624,44 @@ toc: function (toclevels) {
  */
 
 footnotes: function () {
-  var cont = document.getElementById("content");
+  // Delete existing footnote entries in case we're reloading the footnodes.
+  var i;
   var noteholder = document.getElementById("footnotes");
+  if (!noteholder) {
+    return;
+  }
+  var entriesToRemove = [];
+  for (i = 0; i < noteholder.childNodes.length; i++) {
+    var entry = noteholder.childNodes[i];
+    if (entry.nodeName == 'DIV' && entry.getAttribute("class") == "footnote")
+      entriesToRemove.push(entry);
+  }
+  for (i = 0; i < entriesToRemove.length; i++) {
+    noteholder.removeChild(entriesToRemove[i]);
+  }
+
+  // Rebuild footnote entries.
+  var cont = document.getElementById("content");
   var spans = cont.getElementsByTagName("span");
   var refs = {};
   var n = 0;
   for (i=0; i<spans.length; i++) {
     if (spans[i].className == "footnote") {
       n++;
-      // Use [\s\S] in place of . so multi-line matches work.
-      // Because JavaScript has no s (dotall) regex flag.
-      note = spans[i].innerHTML.match(/\s*\[([\s\S]*)]\s*/)[1];
+      var note = spans[i].getAttribute("data-note");
+      if (!note) {
+        // Use [\s\S] in place of . so multi-line matches work.
+        // Because JavaScript has no s (dotall) regex flag.
+        note = spans[i].innerHTML.match(/\s*\[([\s\S]*)]\s*/)[1];
+        spans[i].innerHTML =
+          "[<a id='_footnoteref_" + n + "' href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+        spans[i].setAttribute("data-note", note);
+      }
       noteholder.innerHTML +=
         "<div class='footnote' id='_footnote_" + n + "'>" +
         "<a href='#_footnoteref_" + n + "' title='Return to text'>" +
         n + "</a>. " + note + "</div>";
-      spans[i].innerHTML =
-        "[<a id='_footnoteref_" + n + "' href='#_footnote_" + n +
-        "' title='View footnote' class='footnote'>" + n + "</a>]";
       var id =spans[i].getAttribute("id");
       if (id != null) refs["#"+id] = n;
     }
@@ -543,13 +681,36 @@ footnotes: function () {
       }
     }
   }
+},
+
+install: function(toclevels) {
+  var timerId;
+
+  function reinstall() {
+    asciidoc.footnotes();
+    if (toclevels) {
+      asciidoc.toc(toclevels);
+    }
+  }
+
+  function reinstallAndRemoveTimer() {
+    clearInterval(timerId);
+    reinstall();
+  }
+
+  timerId = setInterval(reinstall, 500);
+  if (document.addEventListener)
+    document.addEventListener("DOMContentLoaded", reinstallAndRemoveTimer, false);
+  else
+    window.onload = reinstallAndRemoveTimer;
 }
 
 }
+asciidoc.install(2);
 /*]]>*/
 </script>
 </head>
-<body>
+<body class="article">
 <div id="header">
 <h1>Director support for PHP</h1>
 <span id="author">Miklos Vajna</span><br />
@@ -560,6 +721,7 @@ footnotes: function () {
 </div>
 </div>
 <div id="content">
+<div class="sect1">
 <h2 id="_abstract">1. Abstract</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>SWIG&#8217;s directors allow "callback" functionality to be wrapped.
@@ -569,9 +731,13 @@ supports directors for Python, Ruby, Java, C#, and Ocaml. In particular,
 PHP support is lacking, but it&#8217;s certainly possible to implement - and
 this summer I would like to work on this.</p></div>
 </div>
+</div>
+<div class="sect1">
 <h2 id="_content">2. Content</h2>
 <div class="sectionbody">
-<h3 id="_detailed_description">2.1. Detailed Description</h3><div style="clear:left"></div>
+<div class="sect2">
+<h3 id="_detailed_description">2.1. Detailed Description</h3>
+<div class="sect3">
 <h4 id="_full_description">2.1.1. Full description</h4>
 <div class="paragraph"><p>SWIG is normally can be used for wrapping a C/C++ library to be
 accessible from other languages like Python, PHP, etc. In case the given
@@ -582,16 +748,22 @@ inherit the C++ class of callback function in the target language and
 implement the callbacks there.  The director feature is implemented for
 a number of languages, but PHP support is not yet done.  This summer I
 would like to implement it.</p></div>
+</div>
+<div class="sect3">
 <h4 id="_benefits">2.1.2. Benefits</h4>
 <div class="paragraph"><p>When the project is completed, users who use SWIG to access C/C++
 libraries from PHP will have the ability to implement callback functions
 in PHP by being able to inherit C++ classes in PHP.</p></div>
+</div>
+<div class="sect3">
 <h4 id="_motivation">2.1.3. Motivation</h4>
 <div class="paragraph"><p>I got the idea of working on this because I already used the director
 feature of SWIG in the libwpd project for Java, and recently the libwpd
 maintainer added C# support to CVS as well - based on my work. It would
 be nice to have PHP support as well, but currently SWIG does not allow
 me to do so.</p></div>
+</div>
+<div class="sect3">
 <h4 id="_implementation_design">2.1.4. Implementation design</h4>
 <div class="paragraph"><p>Regarding implementation, I want to take the Python director support as
 an example and implement this feature in a similar way for PHP. I don&#8217;t
@@ -599,11 +771,13 @@ know exact filenames, because I don&#8217;t know (yet) the PHP nor the SWIG
 internal API, but I expect the areas touched by the Python
 implementation will basically match the ones I want to touch because of
 PHP.</p></div>
+</div>
+<div class="sect3">
 <h4 id="_use_cases">2.1.5. Use cases</h4>
 <div class="paragraph"><p>The typical usage of the director feature is the following: A C++ parser
 library provides a class of virtual functions, like:</p></div>
 <div class="listingblock">
-<div class="content"><!-- Generator: GNU source-highlight 3.1.3
+<div class="content"><!-- Generator: GNU source-highlight 3.1.4
 by Lorenzo Bettini
 http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
@@ -623,7 +797,11 @@ curl PHP bindings
 <div class="paragraph"><p>Of course I don&#8217;t want to reinvent the wheel, so I want to first see how
 the Python director test-cases work, and then I can write a PHP version
 of them to test my code.</p></div>
-<h3 id="_implementation_timeline">2.2. Implementation timeline</h3><div style="clear:left"></div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_implementation_timeline">2.2. Implementation timeline</h3>
+<div class="sect3">
 <h4 id="_milestones">2.2.1. Milestones</h4>
 <div class="ulist"><ul>
 <li>
@@ -686,6 +864,8 @@ write documentation and if time permits - implement related other minor
 features in the second half of the summer. I used concrete dates so that
 I can be checked easily if I&#8217;m on track, but of course I may finish with
 a given part a bit earlier or I may have a little delay.</p></div>
+</div>
+<div class="sect3">
 <h4 id="_exams_holidays_etc">2.2.2. Exams, holidays, etc.</h4>
 <div class="paragraph"><p>I&#8217;m a student in Hungary, and here the exam period is between
 2009.05.18. and 2009.06.26. Sadly this has a big overlap with the Summer
@@ -696,10 +876,14 @@ nothing a few days before the exam.  I don&#8217;t know the exact date, but
 probably after the mid-term evaluation I&#8217;ll have a week of holiday. I
 think once I returned I can work more productive on my project with a
 fresh mind, compared to going nowhere during the whole summer.</p></div>
+</div>
+<div class="sect3">
 <h4 id="_communication">2.2.3. Communication</h4>
 <div class="paragraph"><p>My experience is that IRC is handy for quick questions, but basically
 the primary protocol is email. If this is OK for my mentor, then I would
 like to use these two for this project as well.</p></div>
+</div>
+<div class="sect3">
 <h4 id="_invested_time_before_during_and_after_soc">2.2.4. Invested time before, during and after SoC</h4>
 <div class="paragraph"><p>I would like to start with trivial patches or minor bugfixes before the
 SoC starts, so when I start to work on my project, hopefully my name
@@ -707,36 +891,54 @@ will not be unknown on the SWIG developer list. I plan to work 40 hours
 a week during the SoC. (Well, basically. I do not use a timer, the
 average is about something like this.) I don&#8217;t know the future, I hope I
 can do some contribution after SoC as well.</p></div>
+</div>
+<div class="sect3">
 <h4 id="_future_work">2.2.5. Future work</h4>
 <div class="paragraph"><p>I don&#8217;t know anything about it so far, but I&#8217;m sure there will be new
 ideas during the implementation of the project. I&#8217;m sure I&#8217;ll at least
 document these ideas once the project is finished, so I or others can
 work on them after the end of SoC.</p></div>
-<h3 id="_relevant_knowledge">2.3. Relevant knowledge</h3><div style="clear:left"></div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_relevant_knowledge">2.3. Relevant knowledge</h3>
+<div class="sect3">
 <h4 id="_experience_of_swig">2.3.1. Experience of SWIG</h4>
 <div class="paragraph"><p>I used swig&#8217;s director feature when I created the Java bindings for
 libwpd and I used SWIG&#8217;s C#, Java, Perl and Python targets with the
 Pacman package manager (but the later does not use directors). So I&#8217;m
 familiar with SWIG as a user, but I did not contribute patches to SWIG
 itself so far.</p></div>
+</div>
+<div class="sect3">
 <h4 id="_experience_in_the_project_specific_area">2.3.2. Experience in the project specific area</h4>
 <div class="paragraph"><p>I expect that I&#8217;ll need to write C/C++ and/or PHP code during the
 project. I contributed to various projects written in these languages
 (see below).</p></div>
+</div>
+<div class="sect3">
 <h4 id="_used_toolchains_and_platforms">2.3.3. Used toolchains and platforms</h4>
 <div class="paragraph"><p>I&#8217;m a Linux guy, and I use OS X sometimes, mainly for testing purposes
 as well. I do not really use Windows, unless really needed (then I can
 install it in a virtual machine or something). I&#8217;m familiar with <tt>gcc</tt>
 and <tt>make</tt>, I used autotools for other projects previously as well.</p></div>
+</div>
+<div class="sect3">
 <h4 id="_recent_interaction_with_the_swig_community">2.3.4. Recent interaction with the SWIG community</h4>
 <div class="paragraph"><p>I&#8217;m hanging around on #swig-gsoc, and I have talked a bit with William
 Fulton and Olly Betts there.</p></div>
-<h3 id="_about_me">2.4. About Me</h3><div style="clear:left"></div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_about_me">2.4. About Me</h3>
+<div class="sect3">
 <h4 id="_where_do_i_work_study_and_my_interests">2.4.1. Where do I work/study and my interests</h4>
 <div class="paragraph"><p>Education: Completing a B.Sc. degree in Computer Science (since 2005) at
 Budapest University of Technology and Economics. I work for SZTAKI
 (<a href="http://www.sztaki.hu/?en">http://www.sztaki.hu/?en</a>, part time - 1 day in a week, since 2004). I
 have a page with a few minor projects:  <a href="http://vmiklos.hu/projects/">http://vmiklos.hu/projects/</a></p></div>
+</div>
+<div class="sect3">
 <h4 id="_links">2.4.2. Links</h4>
 <div class="paragraph"><p>A have a page with links to patches I contributed to other FOSS
 projects:  <a href="http://vmiklos.hu/portfolio/">http://vmiklos.hu/portfolio/</a>  Mostly minor code and/or
@@ -746,20 +948,26 @@ wapreader (these are C and PHP projects).  I&#8217;m generally a bash, C/C++
 and Python guy. I know PHP very well, too. I know some
 perl/Java/erlang/C# as well.  I&#8217;m familiar with various version control
 systems, including SVN and Git.</p></div>
+</div>
+<div class="sect3">
 <h4 id="_irc_name">2.4.3. IRC name</h4>
 <div class="paragraph"><p>vmiklos</p></div>
 </div>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_additional_resources">3. Additional resources</h2>
 <div class="sectionbody">
 <div class="ulist"><ul>
 <li>
 <p>
-<a href="http://vmiklos.hu/gitweb/?p=gsoc2009.git;a=summary">gitweb</a>
+<a href="https://github.com/downloads/vmiklos/gsoc2009">gitweb</a>
 </p>
 </li>
 <li>
 <p>
-<a href="Miklos_Vajna.tar.gz">patches tarball</a>
+<a href="https://github.com/downloads/vmiklos/gsoc2009/Miklos_Vajna.tar.gz">patches tarball</a>
 </p>
 </li>
 <li>
@@ -769,6 +977,8 @@ systems, including SVN and Git.</p></div>
 </li>
 </ul></div>
 </div>
+</div>
+<div class="sect1">
 <h2 id="_references">4. References</h2>
 <div class="sectionbody">
 <div class="ulist"><ul>
@@ -781,10 +991,11 @@ systems, including SVN and Git.</p></div>
 </ul></div>
 </div>
 </div>
+</div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2010-06-26 02:51:06 CEST
+Last updated 2012-01-12 02:44:58 CET
 </div>
 </div>
 </body>
