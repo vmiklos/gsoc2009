@@ -213,7 +213,7 @@ vmiklos
 
 == Additional resources
 
-- https://github.com/downloads/vmiklos/gsoc2009[gitweb]
+- https://github.com/vmiklos/gsoc2009[gitweb]
 - https://github.com/downloads/vmiklos/gsoc2009/Miklos_Vajna.tar.gz[patches tarball]
 - link:gsoc-2k9.txt[application source]
 
